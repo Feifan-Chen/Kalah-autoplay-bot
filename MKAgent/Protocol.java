@@ -150,29 +150,27 @@ public class Protocol
     			board.setSeeds(Side.SOUTH, i+1, Integer.parseInt(boardParts[i+board.getNoOfHoles()+1]));
     		// southern store:
 			board.setSeedsInStore(Side.SOUTH, Integer.parseInt(boardParts[2*board.getNoOfHoles()+1]));
-    	}
-    	catch (NumberFormatException e)
-    	{
-    		throw new InvalidMessageException("Illegal value for seed count: " + e.getMessage());
-    	}
-    	catch (IllegalArgumentException e)
+    	} catch (IllegalArgumentException e)
     	{
     		throw new InvalidMessageException("Illegal value for seed count: " + e.getMessage());
     	}
 
-    	// 3rd argument: who's turn?
+		// 3rd argument: who's turn?
 		moveTurn.end = false;
-    	if (msgParts[3].equals("YOU\n"))
-    		moveTurn.again = true;
-    	else if (msgParts[3].equals("OPP\n"))
-    		moveTurn.again = false;
-    	else if (msgParts[3].equals("END\n"))
-    	{
-    		moveTurn.end = true;
-    		moveTurn.again = false;
-    	}
-    	else
-    		throw new InvalidMessageException("Illegal value for turn parameter: " + msgParts[3]);
+		switch (msgParts[3]) {
+			case "YOU\n":
+				moveTurn.again = true;
+				break;
+			case "OPP\n":
+				moveTurn.again = false;
+				break;
+			case "END\n":
+				moveTurn.end = true;
+				moveTurn.again = false;
+				break;
+			default:
+				throw new InvalidMessageException("Illegal value for turn parameter: " + msgParts[3]);
+		}
 
     	return moveTurn;
     }

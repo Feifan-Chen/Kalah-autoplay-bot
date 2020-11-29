@@ -1,4 +1,7 @@
 package MKAgent;
+
+import java.util.ArrayList;
+
 /**
  * This class deals with moves on a Kalah board.
  */
@@ -66,6 +69,15 @@ public class Kalah
     {
     	return gameOver(board);
     }
+
+	/**
+	 * Return all legal moves for the specified player.
+	 * @param side The side to check.
+	 * @return All legal moves at this time for the specified player.
+	 */
+	public ArrayList<Move> getAllLegalMoves(Side side) {
+    	return getAllLegalMoves(board, side);
+	}
 
     /**
      * Checks whether a given move is legal on a given board. The move
@@ -232,5 +244,23 @@ public class Kalah
 
     	return holesEmpty(board, Side.NORTH) || holesEmpty(board, Side.SOUTH);
     }
+
+	/**
+	 * Return all legal moves for the specified player.
+	 * @param board The board to check.
+	 * @param side The side to check.
+	 * @return All legal moves at this time for the specified player.
+	 */
+	public ArrayList<Move> getAllLegalMoves(Board board, Side side) {
+		int noOfHoles = board.getNoOfHoles();
+		ArrayList<Move> legalMoves = new ArrayList<>();
+		// Simply check all moves.
+		for (int i = 0; i < noOfHoles; i++) {
+			Move move= new Move(side, i + 1);
+			if (isLegalMove(move))
+				legalMoves.add(move);
+		}
+		return legalMoves;
+	}
 }
 
