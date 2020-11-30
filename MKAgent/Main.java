@@ -45,11 +45,11 @@ public class Main {
     }
 
     private static Node selection(Node node) {
-        assert(node.getChildren().size() > 0);
         return UCT.chooseBestUCTNode(node);
     }
 
-    private static void expand(Node node) {
+    private static void expand(Node parent, Node node) {
+        node.setParent(parent);
     }
 
     private static int simulate(Node node) {
@@ -69,15 +69,12 @@ public class Main {
         root.setBoard(board);
         root.setSide(opposite);
 
-        // Not sure... but I cannot select when there is no child.
-        expand(root);
-
         while (System.currentTimeMillis() < endTime) {
             // Selection.
             Node selectedNode = selection(root);
 
             // Expansion.
-            expand(selectedNode);
+            expand(root, selectedNode);
 
             // Simulation.
             Node nodeToExplore = selectedNode.getRandomChild();
