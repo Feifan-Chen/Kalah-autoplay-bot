@@ -3,28 +3,39 @@ package MKAgent;
 import java.util.ArrayList;
 
 public class Node {
+    // Describes how we get here, null for root node.
+    private Move move;
+
+    // Describes whose decision leads to this node.
     private Side side;
+
     private Node parent;
+    private Board board;
     private int noOfVisits;
     private int totalScore;
     private ArrayList<Node> children;
 
     public Node() {
+        move = null;
         this.noOfVisits = 0;
         this.totalScore = 0;
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side side) {
+    public Node(int noOfVisits, int totalScore, Side side, Move move, Board board) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
+        this.board = new Board(board);
+        this.move = move;
         this.side = side;
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side side, Node parent, ArrayList<Node> children) {
+    public Node(int noOfVisits, int totalScore, Side side, Move move, Board board, Node parent, ArrayList<Node> children) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
+        this.board = new Board(board);
+        this.move = move;
         this.side = side;
         this.parent = parent;
         this.children = children;
@@ -34,8 +45,10 @@ public class Node {
         this.noOfVisits = node.noOfVisits;
         this.totalScore = node.totalScore;
         this.parent = node.parent;
+        this.board = new Board(node.board);
         this.children = node.children;
         this.side = node.side;
+        this.move = node.move;
     }
 
     public void addChild(Node child) {
@@ -47,7 +60,7 @@ public class Node {
     }
 
     public Node getBestChild() {
-        return null;
+        return UCT.chooseBestUCTNode(this);
     }
 
     // Setters, Getters
@@ -83,11 +96,27 @@ public class Node {
         return this.totalScore;
     }
 
+    public void setBoard(Board board) {
+        this.board = board;
+    }
+
+    public Board getBoard() {
+        return this.board;
+    }
+
     public void setChildren(ArrayList<Node> children) {
         this.children = children;
     }
 
     public ArrayList<Node> getChildren() {
         return this.children;
+    }
+
+    public void setMove(Move move) {
+        this.move = move;
+    }
+
+    public Move getMove() {
+        return this.move;
     }
 }

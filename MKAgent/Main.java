@@ -9,21 +9,19 @@ import java.io.Reader;
  * The main application class. It also provides methods for communication
  * with the game engine.
  */
-public class Main
-{
+public class Main {
     /**
      * Input from the game engine.
      */
-    private static Reader input = new BufferedReader(new InputStreamReader(System.in));
+    private static final Reader input = new BufferedReader(new InputStreamReader(System.in));
 
     /**
      * Sends a message to the game engine.
      * @param msg The message.
      */
-    public static void sendMsg (String msg)
-    {
-    	System.out.print(msg);
-    	System.out.flush();
+    public static void sendMsg (String msg) {
+        System.out.print(msg);
+        System.out.flush();
     }
 
     /**
@@ -32,28 +30,73 @@ public class Main
      * @return The message.
      * @throws IOException if there has been an I/O error.
      */
-    public static String recvMsg() throws IOException
-    {
-    	StringBuilder message = new StringBuilder();
-    	int newCharacter;
+    public static String recvMsg() throws IOException {
+        StringBuilder message = new StringBuilder();
+        int newCharacter;
 
-    	do
-    	{
-    		newCharacter = input.read();
-    		if (newCharacter == -1)
-    			throw new EOFException("Input ended unexpectedly.");
-    		message.append((char)newCharacter);
-    	} while((char)newCharacter != '\n');
+        do {
+            newCharacter = input.read();
+            if (newCharacter == -1)
+                throw new EOFException("Input ended unexpectedly.");
+            message.append((char)newCharacter);
+        } while((char)newCharacter != '\n');
 
-		return message.toString();
+        return message.toString();
     }
 
-	/**
-	 * The main method, invoked when the program is started.
-	 * @param args Command line arguments.
-	 */
-	public static void main(String[] args)
-	{
-		// TODO: implement
-	}
+    private static Node selection(Node node) {
+        assert(node.getChildren().size() > 0);
+        return UCT.chooseBestUCTNode(node);
+    }
+
+    private static void expand(Node node) {
+    }
+
+    private static int simulate(Node node) {
+        return 0;
+    }
+
+    private static void backPropagation(Node node, int payoff) {
+    }
+
+    private static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
+        // Side should be me, not the opponent.
+        long startTime = System.currentTimeMillis();
+        long endTime = startTime + timeAllowed;
+        Side opposite = side.opposite();
+        Tree tree = new Tree();
+        Node root = tree.getRoot();
+        root.setBoard(board);
+        root.setSide(opposite);
+
+        // Not sure... but I cannot select when there is no child.
+        expand(root);
+
+        while (System.currentTimeMillis() < endTime) {
+            // Selection.
+            Node selectedNode = selection(root);
+
+            // Expansion.
+            expand(selectedNode);
+
+            // Simulation.
+            Node nodeToExplore = selectedNode.getRandomChild();
+            int payoff = simulate(nodeToExplore);
+
+            // Backpropagation.
+            backPropagation(nodeToExplore, payoff);
+        }
+
+        // We need the move that leads to the best result.
+        return root.getBestChild().getMove();
+    }
+
+    /**
+     * The main method, invoked when the program is started.
+     * @param args Command line arguments.
+     */
+    public static void main(String[] args)
+    {
+        // TODO: implement
+    }
 }
