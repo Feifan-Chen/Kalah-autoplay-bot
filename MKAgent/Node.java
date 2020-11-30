@@ -19,7 +19,7 @@ public class Node {
         move = null;
         this.noOfVisits = 0;
         this.totalScore = 0;
-        this.children = new ArrayList<>();
+        children = null;
     }
 
     public Node(int noOfVisits, int totalScore, Side side, Move move, Board board) {
@@ -28,7 +28,6 @@ public class Node {
         this.board = new Board(board);
         this.move = move;
         this.side = side;
-        this.children = new ArrayList<>();
     }
 
     public Node(int noOfVisits, int totalScore, Side side, Move move, Board board, Node parent, ArrayList<Node> children) {
@@ -109,8 +108,23 @@ public class Node {
     }
 
     public ArrayList<Node> getChildren() {
-        return this.children;
+        if (children == null) {
+            children = new ArrayList<>();
+            for (int i = 0; i < board.getNoOfHoles(); i++) {
+                Board nodeBoard = new Board(getBoard());
+                Move nodeMove = new Move(side, i + 1);
+                if (Kalah.isLegalMove(nodeBoard, nodeMove)) {
+                    Kalah.makeMove(nodeBoard, nodeMove);
+                    Node child = new Node(0, 0, side, nodeMove, nodeBoard, this, null);
+                    children.add(child);
+                }
+            }
+        }
+        assert(children.size() != 0);
+
+        return children;
     }
+
 
     public void setMove(Move move) {
         this.move = move;
