@@ -4,6 +4,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * The main application class. It also provides methods for communication
@@ -52,8 +54,36 @@ public class Main {
         node.setParent(parent);
     }
 
-    private static int simulate(Node node) {
-        return 0;
+    private static int simulate(Node node, long timeAllowed) {
+
+        // do this at most 10 times?
+        long startTime = System.currentTimeMillis();
+        long endTime = startTime + timeAllowed % 10;
+
+        // save the current player's side
+        Side my_side =  node.getSide();
+
+        Side side = node.getSide();
+        Board board = node.getBoard();
+        Kalah kalah = new Kalah(board);
+
+        while(!kalah.gameOver(board) && startTime < endTime)
+        {
+            // Get all legal moves
+            ArrayList<Move> legalMoves = kalah.getAllLegalMoves(side);
+
+            // Get a random move from above results
+            Random rand = new Random();
+            Move next_move = legalMoves.get(rand.nextInt(legalMoves.size()));
+
+            // Make a move on the board and return the next side of player
+            side = kalah.makeMove(board, next_move);
+        }
+
+        if(my_side.equals(side))
+            return board.payoffs(side);
+        else
+            return board.payoffs(side.opposite());
     }
 
     private static void backPropagation(Node node, int payoff) {
@@ -76,9 +106,10 @@ public class Main {
             // Expansion.
             expand(root, selectedNode);
 
-            // Simulation.
             Node nodeToExplore = selectedNode.getRandomChild();
-            int payoff = simulate(nodeToExplore);
+
+            // Simulation.
+            int payoff = simulate(nodeToExplore, timeAllowed);
 
             // Backpropagation.
             backPropagation(nodeToExplore, payoff);
