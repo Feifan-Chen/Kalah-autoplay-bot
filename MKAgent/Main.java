@@ -56,7 +56,13 @@ public class Main {
         return 0;
     }
 
-    private static void backPropagation(Node node, int payoff) {
+    private static void backPropagation(Node node, int payoff, Node root) {
+        //while it is not back to the root, update payoff value and increase
+        while(node != root){
+            node.setNoOfVisits(node.getNoOfVisits() + 1);
+            node.setTotalScore(node.getTotalScore() + payoff);
+            node = node.getParent();
+        }
     }
 
     private static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
@@ -81,7 +87,7 @@ public class Main {
             int payoff = simulate(nodeToExplore);
 
             // Backpropagation.
-            backPropagation(nodeToExplore, payoff);
+            backPropagation(nodeToExplore, payoff, root);
         }
 
         // We need the move that leads to the best result.
