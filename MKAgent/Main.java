@@ -63,6 +63,17 @@ public class Main {
             node.setTotalScore(node.getTotalScore() + payoff);
             node = node.getParent();
         }
+
+        //reward delay method.
+//        int delay_moves = 0;
+//        double reward_weight = 1;
+//        while (node != root){
+//            delay_moves++;
+//            double weight = Math.pow(reward_weight, (double)delay_moves);
+//            node.setNoOfVisits(node.getNoOfVisits() + 1);
+//            node.setTotalScore(node.getTotalScore() + payoff * weight);
+//            node = node.getParent();
+//        }
     }
 
     private static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
