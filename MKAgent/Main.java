@@ -86,7 +86,28 @@ public class Main {
             return board.payoffs(side.opposite());
     }
 
-    private static void backPropagation(Node node, int payoff) {
+    private static void backPropagation(Node node, int payoff, Node root) {
+        //while it is not back to the root, update payoff value and increase
+        Node currentNode = node;
+        while(!currentNode.equals(root)){
+            currentNode.incrementOneVisit();
+            if(currentNode.getSide() == node.getSide() )
+                currentNode.incrementScore(payoff);
+            currentNode = currentNode.getParent();
+        }
+
+        //reward delay method.
+//        int delay_moves = 0;
+//        double reward_weight = 1;
+//        while (!currentNode.equals(root)){
+//          currentNode.incrementOneVisit();
+//          if(currentNode.getSide() == node.getSide() ){
+//              delay_moves++;
+//              double weight = Math.pow(reward_weight, (double)delay_moves);
+//              currentNode.incrementScore(payoff * weight);
+//          }
+//          currentNode = currentNode.getParent();
+//        }
     }
 
     private static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
@@ -112,7 +133,7 @@ public class Main {
             int payoff = simulate(nodeToExplore, timeAllowed);
 
             // Backpropagation.
-            backPropagation(nodeToExplore, payoff);
+            backPropagation(nodeToExplore, payoff, root);
         }
 
         // We need the move that leads to the best result.
