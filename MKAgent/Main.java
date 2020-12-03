@@ -187,7 +187,7 @@ public class Main {
             {
                 System.err.println();
                 msg = recvMsg();
-                System.err.print("Received: " + s);
+                System.err.print("Received: " + msg);
 
                 msg_type = Protocol.getMessageType(msg);
 
