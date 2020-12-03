@@ -58,21 +58,25 @@ public class Main {
 
     private static void backPropagation(Node node, int payoff, Node root) {
         //while it is not back to the root, update payoff value and increase
-        while(node != root){
-            node.setNoOfVisits(node.getNoOfVisits() + 1);
-            node.setTotalScore(node.getTotalScore() + payoff);
-            node = node.getParent();
+        Node currentNode = node;
+        while(currentNode != root){
+            currentNode.incrementOneVisit();
+            if(currentNode.getSide() == node.getSide() )
+                currentNode.incrementScore(payoff);
+            currentNode = currentNode.getParent();
         }
 
         //reward delay method.
 //        int delay_moves = 0;
 //        double reward_weight = 1;
-//        while (node != root){
-//            delay_moves++;
-//            double weight = Math.pow(reward_weight, (double)delay_moves);
-//            node.setNoOfVisits(node.getNoOfVisits() + 1);
-//            node.setTotalScore(node.getTotalScore() + payoff * weight);
-//            node = node.getParent();
+//        while (currentNode != root){
+//          currentNode.incrementOneVisit();
+//          if(currentNode.getSide() == node.getSide() ){
+//              delay_moves++;
+//              double weight = Math.pow(reward_weight, (double)delay_moves);
+//              currentNode.incrementScore(payoff * weight);
+//          }
+//          currentNode = currentNode.getParent();
 //        }
     }
 
