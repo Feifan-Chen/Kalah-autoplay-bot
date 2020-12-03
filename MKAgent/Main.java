@@ -58,7 +58,7 @@ public class Main {
 
         // do this at most 10 times?
         long startTime = System.currentTimeMillis();
-        long endTime = startTime + timeAllowed % 10;
+        long endTime = startTime + timeAllowed / 10;
 
         // save the current player's side
         Side my_side =  node.getSide();
@@ -67,7 +67,7 @@ public class Main {
         Board board = node.getBoard();
         Kalah kalah = new Kalah(board);
 
-        while(!kalah.gameOver(board) && startTime < endTime)
+        while(!kalah.gameOver(board) && System.currentTimeMillis() < endTime)
         {
             // Get all legal moves
             ArrayList<Move> legalMoves = kalah.getAllLegalMoves(side);
