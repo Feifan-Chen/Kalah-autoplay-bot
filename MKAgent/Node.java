@@ -87,6 +87,8 @@ public class Node {
         return this.noOfVisits;
     }
 
+    public void incrementOneVisit() {this.noOfVisits += 1; }
+
     public void setTotalScore(int totalScore) {
         this.totalScore = totalScore;
     }
@@ -94,6 +96,8 @@ public class Node {
     public int getTotalScore() {
         return this.totalScore;
     }
+
+    public void incrementScore(int payoff) {this.totalScore += payoff; }
 
     public void setBoard(Board board) {
         this.board = board;
