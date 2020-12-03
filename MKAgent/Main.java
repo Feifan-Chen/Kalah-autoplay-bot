@@ -4,6 +4,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * The main application class. It also provides methods for communication
@@ -48,8 +50,12 @@ public class Main {
         return UCT.chooseBestUCTNode(node);
     }
 
-    private static void expand(Node parent, Node node) {
-        node.setParent(parent);
+    private static void expand(Node parent) {
+        ArrayList<Move> moves = Kalah.getAllLegalMoves(parent.getBoard(), parent.getSide());
+        Random rand = new Random(System.currentTimeMillis());
+        Move randomMove = moves.get(rand.nextInt(moves.size()));
+        Node child = new Node(0, 0, randomMove.getSide(), randomMove, parent.getBoard(), parent, null);
+        Kalah.makeMove(child.getBoard(), randomMove);
     }
 
     private static int simulate(Node node) {
@@ -74,7 +80,7 @@ public class Main {
             Node selectedNode = selection(root);
 
             // Expansion.
-            expand(root, selectedNode);
+            expand(selectedNode);
 
             // Simulation.
             Node nodeToExplore = selectedNode.getRandomChild();

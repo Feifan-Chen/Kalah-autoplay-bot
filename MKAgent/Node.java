@@ -1,6 +1,7 @@
 package MKAgent;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Node {
     // Describes how we get here, null for root node.
@@ -132,5 +133,15 @@ public class Node {
 
     public Move getMove() {
         return this.move;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Node node = (Node) o;
+        return Objects.equals(move, node.move) &&
+                side == node.side &&
+                Objects.equals(parent, node.parent) &&
+                Objects.equals(board, node.board);
     }
 }
