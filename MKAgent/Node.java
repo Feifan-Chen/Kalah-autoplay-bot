@@ -55,8 +55,10 @@ public class Node {
         this.children.add(child);
     }
 
-    public Node getRandomChild() {
-        return this.children.get((int)(Math.random() * this.children.size()));
+    public Node getRandomChild(ArrayList<Integer> availableChildren) {
+        int index = (int) (Math.random() * availableChildren.size());
+        return this.children.get(availableChildren.get(index));
+        //return this.children.get((int)(Math.random() * this.children.size()));
     }
 
     public Node getBestChild() {
@@ -126,6 +128,15 @@ public class Node {
         return children;
     }
 
+    public ArrayList<Integer> checkAvailableChildren(){
+        ArrayList<Node> children = getChildren();
+        ArrayList<Integer> available = new ArrayList<>();
+        for(int i = 0; i < children.size(); i++) {
+            if (children.get(i).getNoOfVisits() == 0)
+                available.add(i);
+        }
+        return available;
+    }
 
     public void setMove(Move move) {
         this.move = move;

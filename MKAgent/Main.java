@@ -50,12 +50,15 @@ public class Main {
         return UCT.chooseBestUCTNode(node);
     }
 
-    private static void expand(Node parent) {
-        ArrayList<Move> moves = Kalah.getAllLegalMoves(parent.getBoard(), parent.getSide());
-        Random rand = new Random(System.currentTimeMillis());
-        Move randomMove = moves.get(rand.nextInt(moves.size()));
-        Node child = new Node(0, 0, randomMove.getSide(), randomMove, parent.getBoard(), parent, null);
-        Kalah.makeMove(child.getBoard(), randomMove);
+    private static ArrayList<Integer> expand(Node parent) {
+//        ArrayList<Move> moves = Kalah.getAllLegalMoves(parent.getBoard(), parent.getSide());
+//        Random rand = new Random(System.currentTimeMillis());
+//        Move randomMove = moves.get(rand.nextInt(moves.size()));
+//        Node child = new Node(0, 0, randomMove.getSide(), randomMove, parent.getBoard(), parent, null);
+//        Kalah.makeMove(child.getBoard(), randomMove)
+
+        //ArrayList<Node> children = parent.getChildren();
+        return parent.checkAvailableChildren( );
     }
 
     private static int simulate(Node node) {
@@ -80,10 +83,10 @@ public class Main {
             Node selectedNode = selection(root);
 
             // Expansion.
-            expand(selectedNode);
+            ArrayList<Integer> availableChildren = expand(selectedNode);
 
             // Simulation.
-            Node nodeToExplore = selectedNode.getRandomChild();
+            Node nodeToExplore = selectedNode.getRandomChild(availableChildren);
             int payoff = simulate(nodeToExplore);
 
             // Backpropagation.
