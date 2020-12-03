@@ -63,7 +63,7 @@ public class Main {
         // save the current player's side
         Side my_side =  node.getSide();
 
-        Side side = node.getSide();
+        Side side = node.getSide().opposite();
         Board board = node.getBoard();
         Kalah kalah = new Kalah(board);
 
@@ -125,6 +125,100 @@ public class Main {
      */
     public static void main(String[] args)
     {
-        // TODO: implement
+        Side my_side = null;
+        boolean may_swap = false;
+
+        // Record the board locally.
+        Kalah kalah = new Kalah(new Board(7,7));
+
+        long timeAllowed = 0;
+
+        try {
+            String msg = recvMsg();
+            MsgType msg_type = Protocol.getMessageType(msg);
+
+            // Start of the game.
+            switch (msg_type)
+            {
+                // Determine who is on which side.
+                // If this side is South, then make a move first;
+                // If this side is North, then enable may_swap.
+                case START: System.err.println("A start.");
+                    boolean south = Protocol.interpretStartMsg(msg);
+                    System.err.println("Starting player? " + south);
+                    if(south)
+                    {
+                        my_side = Side.SOUTH;
+                        sendMsg(Protocol.createMoveMsg(1));
+                    }
+                    else
+                    {
+                        my_side = Side.NORTH;
+                        may_swap = true;
+                    }
+                    break;
+                case END: System.err.println("An end. Bye bye!"); return;
+                default: break;
+            }
+
+            // Continues the game
+            while (true)
+            {
+                System.err.println();
+                msg = recvMsg();
+                System.err.print("Received: " + s);
+
+                msg_type = Protocol.getMessageType(msg);
+
+                if (msg_type == MsgType.END)
+                    return;
+
+                if (msg_type != MsgType.STATE)
+                    throw new InvalidMessageException("State message expected");
+
+                Protocol.MoveTurn r = Protocol.interpretStateMsg (msg, kalah.getBoard());
+
+                if (r.move == -1) {
+                    my_side = my_side.opposite();
+                }
+
+//                if (!moveTurn.again || moveTurn.end) {
+//                    continue;
+//                }
+
+                // Calculate next move using MCTS
+                Move next_move = MCTSNextMove(kalah.getBoard(), my_side, timeAllowed);
+                msg = Protocol.createMoveMsg(next_move.getHole());
+
+                // If North side, decide whether to swap by:
+                // simulate the next payoff, and calculate the payoff of opp-player,
+                // if that payoff is greater, then create swap message.
+                if (may_swap)
+                {
+                    Board move_board = new Board(kalah.getBoard());
+                    Kalah.makeMove(move_board, next_move);
+
+                    int original_payoff = kalah.getBoard().payoffs(my_side);
+                    int after_swap_payoff = kalah.getBoard().payoffs(my_side.opposite());
+
+                    if (after_swap_payoff > original_payoff)
+                    {
+                        my_side = my_side.opposite();
+                        msg = Protocol.createSwapMsg();
+                    }
+                }
+                may_swap = false;
+
+                // send message to game engine.
+                sendMsg(msg);
+            }
+        }
+        catch (InvalidMessageException e) {
+            System.err.println(e.getMessage());
+        }
+        catch (IOException e)
+        {
+            System.err.println("This shouldn't happen: " + e.getMessage());
+        }
     }
 }
