@@ -51,7 +51,7 @@ public class Main {
     }
 
     private static ArrayList<Node> expand(Node parent) {
-        return parent.checkAvailableChildren( );
+        return parent.checkAvailableChildren();
     }
 
     private static int simulate(Node node) {
