@@ -54,7 +54,8 @@ public class Main {
     }
 
     private static Node expand(Node parent) {
-        parent.expand();
+        if (parent.getNoOfVisits() == 1)
+            parent.expand();
         return parent.getRandomChild();
     }
 
