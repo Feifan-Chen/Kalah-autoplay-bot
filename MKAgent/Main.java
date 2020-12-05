@@ -4,6 +4,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * The main application class. It also provides methods for communication
@@ -51,8 +53,9 @@ public class Main {
         return ret;
     }
 
-    private static ArrayList<Node> expand(Node parent) {
-        return parent.checkAvailableChildren();
+    private static Node expand(Node parent) {
+        parent.expand();
+        return parent.getRandomChild();
     }
 
     private static int simulate(Node node, long timeAllowed) {
@@ -126,14 +129,10 @@ public class Main {
             Node selectedNode = selection(root);
 
             // Expansion.
-            ArrayList<Node> availableChildren = expand(selectedNode);
-
-            Node nodeToExplore = selectedNode.getRandomChild();
+            Node nodeToExplore = expand(selectedNode);
 
             // Simulation.
             int payoff = simulate(nodeToExplore, timeAllowed);
-            Node nodeToExplore = Node.getRandomChild(availableChildren);
-            int payoff = simulate(nodeToExplore);
 
             // Backpropagation.
             backPropagation(nodeToExplore, payoff, root);

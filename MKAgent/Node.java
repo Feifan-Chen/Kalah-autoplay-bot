@@ -120,19 +120,16 @@ public class Node {
     }
 
     public void expand() {
-        if (children == null) {
-            children = new ArrayList<>();
-            for (int i = 0; i < board.getNoOfHoles(); i++) {
-                Board nodeBoard = new Board(getBoard());
-                Move nodeMove = new Move(side, i + 1);
-                if (Kalah.isLegalMove(nodeBoard, nodeMove)) {
-                    Kalah.makeMove(nodeBoard, nodeMove);
-                    Node child = new Node(0, 0, side, nodeMove, nodeBoard, this, null);
-                    children.add(child);
-                }
+        children = new ArrayList<>();
+        for (int i = 0; i < board.getNoOfHoles(); i++) {
+            Board nodeBoard = new Board(board);
+            Move nodeMove = new Move(side, i + 1);
+            if (Kalah.isLegalMove(nodeBoard, nodeMove)) {
+                Kalah.makeMove(nodeBoard, nodeMove);
+                Node child = new Node(0, 0, side, nodeMove, nodeBoard, this, new ArrayList<>());
+                children.add(child);
             }
         }
-        assert(children.size() != 0);
     }
 
     public ArrayList<Node> checkAvailableChildren(){
