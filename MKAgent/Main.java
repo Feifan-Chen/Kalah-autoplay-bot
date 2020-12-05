@@ -47,7 +47,10 @@ public class Main {
     }
 
     private static Node selection(Node node) {
-        return UCT.chooseBestUCTNode(node);
+        Node ret = node;
+        while (node.getChildren().size() != 0)
+            node = UCT.chooseBestUCTNode(node);
+        return ret;
     }
 
     private static void expand(Node parent, Node node) {

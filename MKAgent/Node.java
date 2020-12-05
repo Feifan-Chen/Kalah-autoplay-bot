@@ -19,7 +19,7 @@ public class Node {
         move = null;
         this.noOfVisits = 0;
         this.totalScore = 0;
-        children = null;
+        this.children = new ArrayList<>();
     }
 
     public Node(int noOfVisits, int totalScore, Side side, Move move, Board board) {
@@ -28,6 +28,7 @@ public class Node {
         this.board = new Board(board);
         this.move = move;
         this.side = side;
+        this.children = new ArrayList<>();
     }
 
     public Node(int noOfVisits, int totalScore, Side side, Move move, Board board, Node parent, ArrayList<Node> children) {
@@ -45,7 +46,9 @@ public class Node {
         this.totalScore = node.totalScore;
         this.parent = node.parent;
         this.board = new Board(node.board);
-        this.children = node.children;
+        // Should be a deep copy.
+        this.children = new ArrayList<>();
+        this.children.addAll(node.children);
         this.side = node.side;
         this.move = node.move;
     }
@@ -112,6 +115,10 @@ public class Node {
     }
 
     public ArrayList<Node> getChildren() {
+        return this.children;
+    }
+
+    public void expand() {
         if (children == null) {
             children = new ArrayList<>();
             for (int i = 0; i < board.getNoOfHoles(); i++) {
@@ -125,10 +132,7 @@ public class Node {
             }
         }
         assert(children.size() != 0);
-
-        return children;
     }
-
 
     public void setMove(Move move) {
         this.move = move;
