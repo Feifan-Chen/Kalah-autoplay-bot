@@ -20,7 +20,7 @@ public class Node {
         move = null;
         this.noOfVisits = 0;
         this.totalScore = 0;
-        children = null;
+        this.children = new ArrayList<>();
     }
 
     public Node(int noOfVisits, int totalScore, Side side, Move move, Board board) {
@@ -29,6 +29,7 @@ public class Node {
         this.board = new Board(board);
         this.move = move;
         this.side = side;
+        this.children = new ArrayList<>();
     }
 
     public Node(int noOfVisits, int totalScore, Side side, Move move, Board board, Node parent, ArrayList<Node> children) {
@@ -46,7 +47,9 @@ public class Node {
         this.totalScore = node.totalScore;
         this.parent = node.parent;
         this.board = new Board(node.board);
-        this.children = node.children;
+        // Should be a deep copy.
+        this.children = new ArrayList<>();
+        this.children.addAll(node.children);
         this.side = node.side;
         this.move = node.move;
     }
@@ -55,9 +58,8 @@ public class Node {
         this.children.add(child);
     }
 
-    public static Node getRandomChild(ArrayList<Node> availableChildren) {
-        int index = (int) (Math.random() * availableChildren.size());
-        return availableChildren.get(index);
+    public Node getRandomChild() {
+        return this.children.get((int)(Math.random() * this.children.size()));
     }
 
     public Node getBestChild() {
@@ -89,6 +91,8 @@ public class Node {
         return this.noOfVisits;
     }
 
+    public void incrementOneVisit() {this.noOfVisits += 1; }
+
     public void setTotalScore(int totalScore) {
         this.totalScore = totalScore;
     }
@@ -96,6 +100,8 @@ public class Node {
     public int getTotalScore() {
         return this.totalScore;
     }
+
+    public void incrementScore(int payoff) {this.totalScore += payoff; }
 
     public void setBoard(Board board) {
         this.board = board;
@@ -110,6 +116,10 @@ public class Node {
     }
 
     public ArrayList<Node> getChildren() {
+        return this.children;
+    }
+
+    public void expand() {
         if (children == null) {
             children = new ArrayList<>();
             for (int i = 0; i < board.getNoOfHoles(); i++) {
@@ -123,8 +133,6 @@ public class Node {
             }
         }
         assert(children.size() != 0);
-
-        return children;
     }
 
     public ArrayList<Node> checkAvailableChildren(){

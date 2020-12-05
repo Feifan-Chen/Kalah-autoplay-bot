@@ -282,5 +282,23 @@ public class Board extends Observable implements Cloneable
 
 		return boardString.toString();
 	}
+
+	/**
+	 * Calculate the current pay off
+	 * @param side The current side/player
+	 * @return payoffs, total seeds this side - total seeds opp side
+	 */
+	public int payoffs(Side side)
+	{
+		int this_seeds = getSeedsInStore(side);
+		int opp_seeds = getSeedsInStore(side.opposite());
+		for(int i = 1; i <= holes; i++)
+		{
+			this_seeds += getSeeds(side, i);
+			opp_seeds += getSeeds(side.opposite(), i);
+		}
+		return  this_seeds - opp_seeds;
+	}
+
 }
 
