@@ -72,7 +72,7 @@ public class Main {
         Board board = node.getBoard();
         Kalah kalah = new Kalah(board);
 
-        while(!Kalah.gameOver(board) && System.currentTimeMillis() < endTime)
+        while(!Kalah.gameOver(board))
         {
             // Get all legal moves
             ArrayList<Move> legalMoves = kalah.getAllLegalMoves(side);
@@ -83,6 +83,7 @@ public class Main {
 
             // Make a move on the board and return the next side of player
             side = Kalah.makeMove(board, next_move);
+            System.err.println(board);
         }
 
         if(my_side.equals(side))
@@ -122,6 +123,7 @@ public class Main {
         Side opposite = side.opposite();
         Tree tree = new Tree();
         Node root = tree.getRoot();
+        root.setNoOfVisits(1);
         root.setBoard(board);
         root.setSide(opposite);
 
@@ -155,7 +157,7 @@ public class Main {
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 10000;
+        long timeAllowed = 1000;
 
         try {
             String msg = recvMsg();
