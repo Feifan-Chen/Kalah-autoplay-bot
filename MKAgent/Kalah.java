@@ -233,7 +233,6 @@ public class Kalah {
      * @return All legal moves at this time for the specified player.
      */
     public static ArrayList<Move> getAllLegalMoves(Board board, Side side) {
-        // FIXME: This method cannot detect if SWAP is legal of not.
         int noOfHoles = board.getNoOfHoles();
         ArrayList<Move> legalMoves = new ArrayList<>();
         // Simply check all moves.

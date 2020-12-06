@@ -72,7 +72,7 @@ public class Main {
         Board board = node.getBoard();
         Kalah kalah = new Kalah(board);
 
-        while(!kalah.gameOver(board) && System.currentTimeMillis() < endTime)
+        while(!Kalah.gameOver(board) && System.currentTimeMillis() < endTime)
         {
             // Get all legal moves
             ArrayList<Move> legalMoves = kalah.getAllLegalMoves(side);
@@ -82,7 +82,7 @@ public class Main {
             Move next_move = legalMoves.get(rand.nextInt(legalMoves.size()));
 
             // Make a move on the board and return the next side of player
-            side = kalah.makeMove(board, next_move);
+            side = Kalah.makeMove(board, next_move);
         }
 
         if(my_side.equals(side))
@@ -155,7 +155,7 @@ public class Main {
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 0;
+        long timeAllowed = 10000;
 
         try {
             String msg = recvMsg();
@@ -182,7 +182,9 @@ public class Main {
                     }
                     break;
                 case END: System.err.println("An end. Bye bye!"); return;
-                default: break;
+                default:
+                    System.err.println("State message expected");
+                    break;
             }
 
             // Continues the game
@@ -206,9 +208,11 @@ public class Main {
                     my_side = my_side.opposite();
                 }
 
-//                if (!moveTurn.again || moveTurn.end) {
-//                    continue;
-//                }
+                if (r.again) {
+                    continue;
+                }
+                if (r.end)
+                    return;
 
                 // Calculate next move using MCTS
                 Move next_move = MCTSNextMove(kalah.getBoard(), my_side, timeAllowed);
