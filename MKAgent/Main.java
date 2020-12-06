@@ -83,7 +83,7 @@ public class Main {
 
             // Make a move on the board and return the next side of player
             side = Kalah.makeMove(board, next_move);
-            System.err.println(board);
+            //System.err.println(board);
         }
 
         if(my_side.equals(side))
@@ -218,6 +218,7 @@ public class Main {
 
                 // Calculate next move using MCTS
                 Move next_move = MCTSNextMove(kalah.getBoard(), my_side, timeAllowed);
+                //System.err.println(next_move.getSide() + "" + next_move.getHole());
                 msg = Protocol.createMoveMsg(next_move.getHole());
 
                 // If North side, decide whether to swap by:
@@ -229,18 +230,21 @@ public class Main {
                     Kalah.makeMove(move_board, next_move);
 
                     int original_payoff = kalah.getBoard().payoffs(my_side);
-                    int after_swap_payoff = kalah.getBoard().payoffs(my_side.opposite());
-
+                    //System.err.println("op: " + kalah.getBoard());
+                    int after_swap_payoff = move_board.payoffs(my_side.opposite());
+                    //System.err.println("swap" + move_board);
                     if (after_swap_payoff > original_payoff)
                     {
                         my_side = my_side.opposite();
                         msg = Protocol.createSwapMsg();
+                        //System.err.println(msg);
                     }
                 }
                 may_swap = false;
 
                 // send message to game engine.
                 sendMsg(msg);
+                System.err.println(msg);
             }
         }
         catch (InvalidMessageException e) {
