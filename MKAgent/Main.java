@@ -48,19 +48,56 @@ public class Main {
 
     private static Node selection(Node node) {
         Node ret = node;
-        while (node.getChildren().size() != 0)
-            node = UCT.chooseBestUCTNode(node);
+
+        while (ret.getChildren().size() != 0)
+        {
+
+            ArrayList<Node> children = ret.getChildren();
+            for (Node child: children)
+                if (child.getNoOfVisits() == 0)
+                    return child.getParent();
+
+            ret = UCT.chooseBestUCTNode(ret);
+        }
         return ret;
     }
-
+//CHANGE;1;7,7,7,7,7,7,7,0,0,8,8,8,8,8,8,1;YOU
     private static Node expand(Node parent) {
         if (parent.getNoOfVisits() == 1)
+        {
+        //    System.err.println("parent " + parent);
             parent.expand();
+          //  System.err.println("parent children size " + parent.getChildren().size());
+        }
+
+
+        ArrayList<Node> children = parent.getChildren();
+        System.err.println(children.size());
+        for (Node node: children)
+            if (node.getNoOfVisits() == 0)
+            {
+                return node;
+            }
+
+
+
         return parent.getRandomChild();
+
+//        ArrayList<Node> greedy_children = new ArrayList<Node>();
+//        for(Node node: parent.getChildren())
+//        {
+//            if(move_gain(node))
+//                greedy_children.add(node);
+//        }
+//        if(greedy_children.size() == 0)
+//            return parent.getRandomChild();
+//        else
+//            return greedy_children.getrandom();
     }
 
-    private static int simulate(Node node, long timeAllowed) {
+    private static int simulate(Node give_node, long timeAllowed) {
 
+        Node node = new Node(give_node);
         // do this at most 10 times?
         long startTime = System.currentTimeMillis();
         long endTime = startTime + timeAllowed / 10;
@@ -95,13 +132,27 @@ public class Main {
     private static void backPropagation(Node node, int payoff, Node root) {
         //while it is not back to the root, update payoff value and increase
         Node currentNode = node;
-        while(!currentNode.equals(root)){
+        int count = 0;
+        do {
+            count ++;
+            //System.err.println("before backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
             currentNode.incrementOneVisit();
+            //System.err.println("backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
             if(currentNode.getSide() == node.getSide() )
                 currentNode.incrementScore(payoff);
             currentNode = currentNode.getParent();
         }
+        while (!currentNode.equals(root));
 
+
+        currentNode.incrementOneVisit();
+        //System.err.println("backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
+        if(currentNode.getSide() == node.getSide() )
+            currentNode.incrementScore(payoff);
+        currentNode = currentNode.getParent();
+
+
+     //   System.err.println("COunt" + count);
         //reward delay method.
 //        int delay_moves = 0;
 //        double reward_weight = 1;
@@ -129,16 +180,27 @@ public class Main {
 
         while (System.currentTimeMillis() < endTime) {
             // Selection.
+            System.err.println("root " + root + " visit " + root.getNoOfVisits());
             Node selectedNode = selection(root);
-
+            if (Kalah.gameOver(selectedNode.getBoard()))
+                break;
+         //   System.err.println("selection board" + selectedNode.getBoard());
+          //  System.err.println("selection " + selectedNode + "visit " + selectedNode.getNoOfVisits());
+           // System.err.println("num of visit" + selectedNode.getNoOfVisits() + "total score: " + selectedNode.getTotalScore());
+          //  System.err.println("Node" + selectedNode);
+           // System.err.println("sum of visit" + selectedNode.getNoOfVisits());
             // Expansion.
             Node nodeToExplore = expand(selectedNode);
+         //  System.err.println("nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
 
             // Simulation.
             int payoff = simulate(nodeToExplore, timeAllowed);
 
             // Backpropagation.
             backPropagation(nodeToExplore, payoff, root);
+
+         //   System.err.println("after selection " + selectedNode + "visit " + selectedNode.getNoOfVisits());
+           // System.err.println("after nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
         }
 
         // We need the move that leads to the best result.

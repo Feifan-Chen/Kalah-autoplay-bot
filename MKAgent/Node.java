@@ -121,15 +121,42 @@ public class Node {
 
     public void expand() {
         children = new ArrayList<>();
+        ArrayList<Node> not_greedy_children = new ArrayList<>();
+
         for (int i = 0; i < board.getNoOfHoles(); i++) {
             Board nodeBoard = new Board(board);
+            //System.err.println("board " + board);
+           // System.err.println("nodeBoard " + nodeBoard);
             Move nodeMove = new Move(side.opposite(), i + 1);
             if (Kalah.isLegalMove(nodeBoard, nodeMove)) {
+                //System.err.println("check");
+                boolean is_greedy = is_greedy_child(nodeBoard, nodeMove);
                 Kalah.makeMove(nodeBoard, nodeMove);
                 Node child = new Node(0, 0, side.opposite(), nodeMove, nodeBoard, this, new ArrayList<>());
-                children.add(child);
+                //System.err.println("children board " + child.getBoard());
+                if (is_greedy)
+                    children.add(child);
+
+                not_greedy_children.add(child);
             }
         }
+
+        //System.err.println("greedy size "  + not_greedy_children.size());
+        if(children.size() == 0)
+            children = not_greedy_children;
+
+        //System.err.println("children size "  + children.size());
+
+    }
+
+    public boolean is_greedy_child(Board board, Move move)
+    {
+        // If the seeds in the hole equal to the 8-move
+        // means this move will have another turn.
+        if (board.getSeeds(move.getSide(), move.getHole()) == (8 - move.getHole()))
+            return true;
+        else
+            return false;
     }
 
     public ArrayList<Node> checkAvailableChildren(){
