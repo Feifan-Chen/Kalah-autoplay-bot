@@ -210,11 +210,10 @@ public class Main {
                     my_side = my_side.opposite();
                 }
 
-                if (r.again) {
+
+                if (!r.again || r.end) {
                     continue;
                 }
-                if (r.end)
-                    return;
 
                 // Calculate next move using MCTS
                 Move next_move = MCTSNextMove(kalah.getBoard(), my_side, timeAllowed);
@@ -229,15 +228,19 @@ public class Main {
                     Board move_board = new Board(kalah.getBoard());
                     Kalah.makeMove(move_board, next_move);
 
+
                     int original_payoff = kalah.getBoard().payoffs(my_side);
-                    //System.err.println("op: " + kalah.getBoard());
+                    //System.err.println("op: " + kalah.getBoard() + "payoff : " + original_payoff);
                     int after_swap_payoff = move_board.payoffs(my_side.opposite());
-                    //System.err.println("swap" + move_board);
-                    if (after_swap_payoff > original_payoff)
+                    //System.err.println("swap" + move_board + "pay off + " + after_swap_payoff);
+
+                    System.err.println();
+                    System.err.println("1" + msg);
+                    if (after_swap_payoff >= original_payoff)
                     {
                         my_side = my_side.opposite();
                         msg = Protocol.createSwapMsg();
-                        //System.err.println(msg);
+                        //System.err.println("2" + msg);
                     }
                 }
                 may_swap = false;
