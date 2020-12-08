@@ -1,4 +1,5 @@
 package MKAgent;
+//import java.awt.desktop.SystemEventListener;
 import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.IOException;
@@ -72,7 +73,7 @@ public class Main {
 
 
         ArrayList<Node> children = parent.getChildren();
-        System.err.println(children.size());
+        //System.err.println(children.size());
         for (Node node: children)
             if (node.getNoOfVisits() == 0)
             {
@@ -180,7 +181,7 @@ public class Main {
 
         while (System.currentTimeMillis() < endTime) {
             // Selection.
-            System.err.println("root " + root + " visit " + root.getNoOfVisits());
+            //System.err.println("root " + root + " visit " + root.getNoOfVisits());
             Node selectedNode = selection(root);
             if (Kalah.gameOver(selectedNode.getBoard()))
                 break;
@@ -254,9 +255,9 @@ public class Main {
             // Continues the game
             while (true)
             {
-                System.err.println();
+                //System.err.println();
                 msg = recvMsg();
-                System.err.print("Received: " + msg);
+                //System.err.print("Received: " + msg);
 
                 msg_type = Protocol.getMessageType(msg);
 
@@ -272,8 +273,15 @@ public class Main {
                     my_side = my_side.opposite();
                 }
 
-
+                //System.err.println("again:" + r.again);
+                //System.err.println("endgame:" + r.end);
+//                if(!r.again){
+//                        continue;
+//                }
                 if (!r.again || r.end) {
+//                    System.err.println("again:" + r.again);
+//                    System.err.println("endgame:" + r.end);
+                    //System.err.println("condition happened");
                     continue;
                 }
 
@@ -296,8 +304,8 @@ public class Main {
                     int after_swap_payoff = move_board.payoffs(my_side.opposite());
                     //System.err.println("swap" + move_board + "pay off + " + after_swap_payoff);
 
-                    System.err.println();
-                    System.err.println("1" + msg);
+                    //System.err.println();
+                    //System.err.println("1" + msg);
                     if (after_swap_payoff >= original_payoff)
                     {
                         my_side = my_side.opposite();
@@ -309,7 +317,7 @@ public class Main {
 
                 // send message to game engine.
                 sendMsg(msg);
-                System.err.println(msg);
+                //System.err.println(msg);
             }
         }
         catch (InvalidMessageException e) {
