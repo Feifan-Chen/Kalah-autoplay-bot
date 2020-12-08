@@ -74,8 +74,7 @@ public class Main {
     private static Node rollout(Node node, long timeAllowed) {
         Board board = node.getBoard();
         if (Kalah.gameOver(board)) {
-            node.setNoOfVisits(1);
-            node.setTotalScore(board.payoffs(mySide));
+            backPropagation(node, board.payoffs(mySide));
             return node;
         }
 
@@ -84,11 +83,14 @@ public class Main {
         Board simulateBoard = new Board(board);
         Side turn = Kalah.makeMove(simulateBoard, randMove);
         Node simulateNode = new Node(0, 0, randMove.getSide(), turn, randMove, simulateBoard, node, new ArrayList<>());
-        return rollout(simulateNode, timeAllowed);
-    }
 
-    private static void backPropagation(Node node) {
-        backPropagation(node.getParent(), node.getTotalScore());
+        for (Node child : node.getChildren()) {
+            if (child.equals(simulateNode)) {
+                simulateNode = child;
+                break;
+            }
+        }
+        return rollout(simulateNode, timeAllowed);
     }
 
     private static void backPropagation(Node node, int payoff) {
@@ -100,8 +102,8 @@ public class Main {
     }
 
     private static Move MCTSNextMove(Board board, long timeAllowed) {
-        double generation = 0;
-        final double GEN_LIMIT = 1000;
+        int generation = 0;
+        final int GEN_LIMIT = 20000;
 
         long endTime = System.currentTimeMillis() + timeAllowed*10000000;
 
@@ -119,10 +121,10 @@ public class Main {
                 nodeToExplore = expand(selectedNode);
 
             // Rollout.
-            Node rolloutNode = rollout(nodeToExplore, timeAllowed);
+            rollout(nodeToExplore, timeAllowed);
 
-            // Backpropagation.
-            backPropagation(rolloutNode);
+//            // Backpropagation.
+//            backPropagation(rolloutNode);
         }
 
         // We need the move that leads to the best result.

@@ -10,7 +10,6 @@ public class Node implements Comparable<Node> {
     // Describes whose decision leads to this node.
     private Side side;
     private Side whosTurnNext;
-    private boolean root = false;
 
     private Node parent;
     private Board board;
@@ -148,14 +147,6 @@ public class Node implements Comparable<Node> {
         return whosTurnNext;
     }
 
-    public boolean isRoot() {
-        return root;
-    }
-
-    public void setRoot(Boolean root) {
-        this.root = root;
-    }
-
     public Double getUCTValue() {
         if (noOfVisits == 0)
             return Double.MAX_VALUE;
@@ -169,6 +160,21 @@ public class Node implements Comparable<Node> {
          */
         double visits = noOfVisits;
         return (totalScore / visits + 2 * Math.sqrt(Math.log(getRootVisit(this)) / visits));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Node node = (Node) o;
+        return Objects.equals(move, node.move) &&
+                Objects.equals(parent, node.parent) &&
+                Objects.equals(board, node.board);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(move, side, whosTurnNext, parent, board, noOfVisits, totalScore, children);
     }
 
     @Override
