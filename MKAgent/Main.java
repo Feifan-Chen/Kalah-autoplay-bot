@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Random;
 
 /**
@@ -111,33 +112,33 @@ public class Main {
         while (System.currentTimeMillis() < endTime && generation < GEN_LIMIT) {
             generation++;
 
-            System.err.println("Generation: " + generation);
-            System.err.println("Start Selection");
             // Selection.
             Node selectedNode = selection(root);
-            System.err.println("End Selection");
 
             if (Kalah.gameOver(selectedNode.getBoard()))
                 break;
 
-            System.err.println("Start Expansion");
             // Expansion.
             Node nodeToExplore = expand(selectedNode);
-            System.err.println("End Expansion");
 
-            System.err.println("Start Rollout");
             // Rollout.
             Node rolloutNode = rollout(nodeToExplore, timeAllowed);
-            System.err.println("End Rollout");
 
-            System.err.println("Start Backpropagation");
             // Backpropagation.
             backPropagation(rolloutNode);
-            System.err.println("End Backpropagation");
         }
 
         // We need the move that leads to the best result.
-        return Collections.max(root.getChildren()).getMove();
+        Node best_child = Collections.max(root.getChildren(), (first, second) -> {
+            double firstReward = (double) first.getTotalScore()/first.getNoOfVisits();
+            double secondReward = (double) second.getTotalScore()/second.getNoOfVisits();
+            if (firstReward > secondReward)
+                return 1;
+            else if (firstReward < secondReward)
+                return -1;
+            return 0;
+        });
+        return best_child.getMove();
     }
 
     /**
@@ -223,18 +224,18 @@ public class Main {
                 // if that payoff is greater, then create swap message.
                 if (may_swap)
                 {
-//                    Board move_board = new Board(kalah.getBoard());
-//                    Kalah.makeMove(move_board, next_move);
-//
-//
-//                    int original_payoff = kalah.getBoard().payoffs(mySide);
-//                    int after_swap_payoff = kalah.getBoard().payoffs(oppSide);
-//
-//                    if (after_swap_payoff >= original_payoff)
-//                    {
-//                        mySide = mySide.opposite();
-//                        oppSide = oppSide.opposite();
-//                    }
+                    Board move_board = new Board(kalah.getBoard());
+                    Kalah.makeMove(move_board, next_move);
+
+
+                    int original_payoff = kalah.getBoard().payoffs(mySide);
+                    int after_swap_payoff = kalah.getBoard().payoffs(oppSide);
+
+                    if (after_swap_payoff >= original_payoff)
+                    {
+                        mySide = mySide.opposite();
+                        oppSide = oppSide.opposite();
+                    }
                 }
                 may_swap = false;
 
