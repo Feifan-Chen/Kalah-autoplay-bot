@@ -209,15 +209,12 @@ public class Main {
                     oppSide = oppSide.opposite();
                 }
 
-
-                if (!r.again || r.end) {
+                if (!r.again) {
                     continue;
                 }
 
                 // Calculate next move using MCTS
                 Move next_move = MCTSNextMove(kalah.getBoard(), timeAllowed);
-                if (!Kalah.isLegalMove(kalah.getBoard(), next_move))
-                    System.out.println("??");
 
                 msg = Protocol.createMoveMsg(next_move.getHole());
 
@@ -226,18 +223,18 @@ public class Main {
                 // if that payoff is greater, then create swap message.
                 if (may_swap)
                 {
-                    Board move_board = new Board(kalah.getBoard());
-                    Kalah.makeMove(move_board, next_move);
-
-
-                    int original_payoff = kalah.getBoard().payoffs(mySide);
-                    int after_swap_payoff = move_board.payoffs(oppSide);
-
-                    if (after_swap_payoff >= original_payoff)
-                    {
-                        mySide = mySide.opposite();
-                        oppSide = oppSide.opposite();
-                    }
+//                    Board move_board = new Board(kalah.getBoard());
+//                    Kalah.makeMove(move_board, next_move);
+//
+//
+//                    int original_payoff = kalah.getBoard().payoffs(mySide);
+//                    int after_swap_payoff = kalah.getBoard().payoffs(oppSide);
+//
+//                    if (after_swap_payoff >= original_payoff)
+//                    {
+//                        mySide = mySide.opposite();
+//                        oppSide = oppSide.opposite();
+//                    }
                 }
                 may_swap = false;
 
