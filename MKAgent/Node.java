@@ -58,10 +58,7 @@ public class Node implements Comparable<Node> {
         Node parent = node.getParent();
         if (parent == null)
             return node.getNoOfVisits();
-        getRootVisit(parent);
-
-        // should not get here
-        return -1;
+        return getRootVisit(parent);
     }
 
     public void addChild(Node child) {

@@ -54,7 +54,7 @@ public class Main {
     private static Node selection(Node node) {
         if (Node.isLeafNode(node))
             return node;
-        return selection(Collections.max(node.getChildren()));
+        return selection(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
     }
 
     private static Node expand(Node leafNode) {
@@ -100,14 +100,12 @@ public class Main {
     }
 
     private static Move MCTSNextMove(Board board, long timeAllowed) {
-        int generation = 0;
-        final int GEN_LIMIT = 200;
+        double generation = 0;
+        final double GEN_LIMIT = 1000;
 
-        // Side should be me, not the opponent.
-        long startTime = System.currentTimeMillis();
-        long endTime = startTime + timeAllowed;
+        long endTime = System.currentTimeMillis() + timeAllowed*10000000;
 
-        Node root = new Node(0, 0, Side.NORTH, mySide, null, board, null, new ArrayList<>());
+        Node root = new Node(0, 0, null, mySide, null, board, null, new ArrayList<>());
 
         while (System.currentTimeMillis() < endTime && generation < GEN_LIMIT) {
             generation++;
@@ -115,11 +113,10 @@ public class Main {
             // Selection.
             Node selectedNode = selection(root);
 
-            if (Kalah.gameOver(selectedNode.getBoard()))
-                break;
-
+            Node nodeToExplore = selectedNode;
             // Expansion.
-            Node nodeToExplore = expand(selectedNode);
+            if (selectedNode.getNoOfVisits() == 0)
+                nodeToExplore = expand(selectedNode);
 
             // Rollout.
             Node rolloutNode = rollout(nodeToExplore, timeAllowed);
@@ -130,8 +127,8 @@ public class Main {
 
         // We need the move that leads to the best result.
         Node best_child = Collections.max(root.getChildren(), (first, second) -> {
-            double firstReward = (double) first.getTotalScore()/first.getNoOfVisits();
-            double secondReward = (double) second.getTotalScore()/second.getNoOfVisits();
+            double firstReward = (double)first.getTotalScore()/first.getNoOfVisits();
+            double secondReward = (double)second.getTotalScore()/second.getNoOfVisits();
             if (firstReward > secondReward)
                 return 1;
             else if (firstReward < secondReward)
@@ -154,7 +151,6 @@ public class Main {
         Kalah kalah = new Kalah(new Board(7,7));
 
         long timeAllowed = 1000;
-
 
         try {
             String msg = recvMsg();
