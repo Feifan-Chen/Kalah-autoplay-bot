@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 /**
@@ -47,164 +48,67 @@ public class Main {
     }
 
     private static Node selection(Node node) {
-        Node ret = node;
-
-        while (ret.getChildren().size() != 0)
-        {
-
-            ArrayList<Node> children = ret.getChildren();
-            for (Node child: children)
-                if (child.getNoOfVisits() == 0)
-                    return child.getParent();
-
-            ret = UCT.chooseBestUCTNode(ret);
-        }
-        return ret;
+        if (Node.isLeafNode(node))
+            return node;
+        selection(Collections.max(node.getChildren()));
+        // should never get here
+        return null;
     }
-//CHANGE;1;7,7,7,7,7,7,7,0,0,8,8,8,8,8,8,1;YOU
-    private static Node expand(Node parent) {
-        if (parent.getNoOfVisits() == 1)
-        {
-        //    System.err.println("parent " + parent);
-            parent.expand();
-          //  System.err.println("parent children size " + parent.getChildren().size());
-        }
 
-
-        ArrayList<Node> children = parent.getChildren();
-        System.err.println(children.size());
-        for (Node node: children)
-            if (node.getNoOfVisits() == 0)
-            {
-                return node;
+    private static Node expand(Node leafNode) {
+        Board board = leafNode.getBoard();
+        for (int i = 1; i <= board.getNoOfHoles(); i++) {
+            Board nodeBoard = new Board(board);
+            Move nodeMove = new Move(leafNode.getSide().opposite(), i);
+            if (Kalah.isLegalMove(nodeBoard, nodeMove)) {
+                Kalah.makeMove(nodeBoard, nodeMove);
+                Node child = new Node(0, 0, nodeMove.getSide(), nodeMove, nodeBoard, leafNode, new ArrayList<>());
+                leafNode.addChild(child);
             }
-
-
-
-        return parent.getRandomChild();
-
-//        ArrayList<Node> greedy_children = new ArrayList<Node>();
-//        for(Node node: parent.getChildren())
-//        {
-//            if(move_gain(node))
-//                greedy_children.add(node);
-//        }
-//        if(greedy_children.size() == 0)
-//            return parent.getRandomChild();
-//        else
-//            return greedy_children.getrandom();
+        }
+        return leafNode.getChildren().get(0);
     }
 
-    private static int simulate(Node give_node, long timeAllowed) {
-
-        Node node = new Node(give_node);
-        // do this at most 10 times?
-        long startTime = System.currentTimeMillis();
-        long endTime = startTime + timeAllowed / 10;
-
-        // save the current player's side
-        Side my_side =  node.getSide();
-
-        Side side = node.getSide().opposite();
-        Board board = node.getBoard();
-        Kalah kalah = new Kalah(board);
-
-        while(!Kalah.gameOver(board))
-        {
-            // Get all legal moves
-            ArrayList<Move> legalMoves = kalah.getAllLegalMoves(side);
-
-            // Get a random move from above results
-            Random rand = new Random();
-            Move next_move = legalMoves.get(rand.nextInt(legalMoves.size()));
-
-            // Make a move on the board and return the next side of player
-            side = Kalah.makeMove(board, next_move);
-            //System.err.println(board);
-        }
-
-        if(my_side.equals(side))
-            return board.payoffs(side);
-        else
-            return board.payoffs(side.opposite());
+    private static int rollout(Node node, long timeAllowed) {
+        return 0;
     }
 
     private static void backPropagation(Node node, int payoff, Node root) {
-        //while it is not back to the root, update payoff value and increase
-        Node currentNode = node;
-        int count = 0;
-        do {
-            count ++;
-            //System.err.println("before backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
-            currentNode.incrementOneVisit();
-            //System.err.println("backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
-            if(currentNode.getSide() == node.getSide() )
-                currentNode.incrementScore(payoff);
-            currentNode = currentNode.getParent();
-        }
-        while (!currentNode.equals(root));
 
-
-        currentNode.incrementOneVisit();
-        //System.err.println("backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
-        if(currentNode.getSide() == node.getSide() )
-            currentNode.incrementScore(payoff);
-        currentNode = currentNode.getParent();
-
-
-     //   System.err.println("COunt" + count);
-        //reward delay method.
-//        int delay_moves = 0;
-//        double reward_weight = 1;
-//        while (!currentNode.equals(root)){
-//          currentNode.incrementOneVisit();
-//          if(currentNode.getSide() == node.getSide() ){
-//              delay_moves++;
-//              double weight = Math.pow(reward_weight, (double)delay_moves);
-//              currentNode.incrementScore(payoff * weight);
-//          }
-//          currentNode = currentNode.getParent();
-//        }
     }
 
     private static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
+        int generation = 0;
+        final int GEN_LIMIT = 200;
+
         // Side should be me, not the opponent.
         long startTime = System.currentTimeMillis();
         long endTime = startTime + timeAllowed;
-        Side opposite = side.opposite();
         Tree tree = new Tree();
         Node root = tree.getRoot();
-        root.setNoOfVisits(1);
         root.setBoard(board);
-        root.setSide(opposite);
+        root.setSide(side.opposite());
 
-        while (System.currentTimeMillis() < endTime) {
+        while (System.currentTimeMillis() < endTime && generation < GEN_LIMIT) {
+            generation++;
+
             // Selection.
-            System.err.println("root " + root + " visit " + root.getNoOfVisits());
             Node selectedNode = selection(root);
             if (Kalah.gameOver(selectedNode.getBoard()))
                 break;
-         //   System.err.println("selection board" + selectedNode.getBoard());
-          //  System.err.println("selection " + selectedNode + "visit " + selectedNode.getNoOfVisits());
-           // System.err.println("num of visit" + selectedNode.getNoOfVisits() + "total score: " + selectedNode.getTotalScore());
-          //  System.err.println("Node" + selectedNode);
-           // System.err.println("sum of visit" + selectedNode.getNoOfVisits());
+
             // Expansion.
             Node nodeToExplore = expand(selectedNode);
-         //  System.err.println("nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
 
-            // Simulation.
-            int payoff = simulate(nodeToExplore, timeAllowed);
+            // Rollout.
+            int payoff = rollout(nodeToExplore, timeAllowed);
 
             // Backpropagation.
             backPropagation(nodeToExplore, payoff, root);
-
-         //   System.err.println("after selection " + selectedNode + "visit " + selectedNode.getNoOfVisits());
-           // System.err.println("after nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
         }
 
         // We need the move that leads to the best result.
-        return root.getBestChild().getMove();
+        return Collections.max(root.getChildren()).getMove();
     }
 
     /**
@@ -279,7 +183,7 @@ public class Main {
 
                 // Calculate next move using MCTS
                 Move next_move = MCTSNextMove(kalah.getBoard(), my_side, timeAllowed);
-                //System.err.println(next_move.getSide() + "" + next_move.getHole());
+
                 msg = Protocol.createMoveMsg(next_move.getHole());
 
                 // If North side, decide whether to swap by:

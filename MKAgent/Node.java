@@ -3,7 +3,7 @@ package MKAgent;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class Node {
+public class Node implements Comparable<Node> {
     // Describes how we get here, null for root node.
     private Move move;
 
@@ -20,15 +20,7 @@ public class Node {
         move = null;
         this.noOfVisits = 0;
         this.totalScore = 0;
-        this.children = new ArrayList<>();
-    }
-
-    public Node(int noOfVisits, int totalScore, Side side, Move move, Board board) {
-        this.noOfVisits = noOfVisits;
-        this.totalScore = totalScore;
-        this.board = new Board(board);
-        this.move = move;
-        this.side = side;
+        this.parent = null;
         this.children = new ArrayList<>();
     }
 
@@ -54,16 +46,26 @@ public class Node {
         this.move = node.move;
     }
 
+    public static boolean isLeafNode(Node node) {
+        return node.children.size() == 0;
+    }
+
+    public static int getRootVisit(Node node) {
+        Node parent = node.getParent();
+        if (parent == null)
+            return node.getNoOfVisits();
+        getRootVisit(parent);
+
+        // should not get here
+        return -1;
+    }
+
     public void addChild(Node child) {
         this.children.add(child);
     }
 
     public Node getRandomChild() {
         return this.children.get((int)(Math.random() * this.children.size()));
-    }
-
-    public Node getBestChild() {
-        return UCT.chooseBestUCTNode(this);
     }
 
     // Setters, Getters
@@ -119,46 +121,6 @@ public class Node {
         return this.children;
     }
 
-    public void expand() {
-        children = new ArrayList<>();
-        ArrayList<Node> not_greedy_children = new ArrayList<>();
-
-        for (int i = 0; i < board.getNoOfHoles(); i++) {
-            Board nodeBoard = new Board(board);
-            //System.err.println("board " + board);
-           // System.err.println("nodeBoard " + nodeBoard);
-            Move nodeMove = new Move(side.opposite(), i + 1);
-            if (Kalah.isLegalMove(nodeBoard, nodeMove)) {
-                //System.err.println("check");
-                boolean is_greedy = is_greedy_child(nodeBoard, nodeMove);
-                Kalah.makeMove(nodeBoard, nodeMove);
-                Node child = new Node(0, 0, side.opposite(), nodeMove, nodeBoard, this, new ArrayList<>());
-                //System.err.println("children board " + child.getBoard());
-                if (is_greedy)
-                    children.add(child);
-
-                not_greedy_children.add(child);
-            }
-        }
-
-        //System.err.println("greedy size "  + not_greedy_children.size());
-        if(children.size() == 0)
-            children = not_greedy_children;
-
-        //System.err.println("children size "  + children.size());
-
-    }
-
-    public boolean is_greedy_child(Board board, Move move)
-    {
-        // If the seeds in the hole equal to the 8-move
-        // means this move will have another turn.
-        if (board.getSeeds(move.getSide(), move.getHole()) == (8 - move.getHole()))
-            return true;
-        else
-            return false;
-    }
-
     public ArrayList<Node> checkAvailableChildren(){
         ArrayList<Node> children = getChildren();
         ArrayList<Node> available = new ArrayList<>();
@@ -177,13 +139,23 @@ public class Node {
         return this.move;
     }
 
+    public Double getUCTValue() {
+        if (noOfVisits == 0)
+            return Double.MAX_VALUE;
+
+        /*
+            UCB(Si) = avg(Vi) + c*sqrt(logN/ni)
+            Vi is average value of its children nodes
+            c is constant (usually 2)
+            N is total number of visits
+            n is current node's number of visits
+         */
+        double visits = noOfVisits;
+        return (totalScore / visits + 2 * Math.sqrt(Math.log(getRootVisit(this)) / visits));
+    }
+
     @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        Node node = (Node) o;
-        return Objects.equals(move, node.move) &&
-                side == node.side &&
-                Objects.equals(parent, node.parent) &&
-                Objects.equals(board, node.board);
+    public int compareTo(Node o) {
+        return this.getUCTValue().compareTo(o.getUCTValue());
     }
 }
