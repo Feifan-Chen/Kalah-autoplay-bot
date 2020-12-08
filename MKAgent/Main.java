@@ -18,6 +18,9 @@ public class Main {
      */
     private static final Reader input = new BufferedReader(new InputStreamReader(System.in));
 
+    private static Side mySide;
+    private static Side oppSide;
+
     /**
      * Sends a message to the game engine.
      * @param msg The message.
@@ -50,9 +53,7 @@ public class Main {
     private static Node selection(Node node) {
         if (Node.isLeafNode(node))
             return node;
-        selection(Collections.max(node.getChildren()));
-        // should never get here
-        return null;
+        return selection(Collections.max(node.getChildren()));
     }
 
     private static Node expand(Node leafNode) {
@@ -69,7 +70,7 @@ public class Main {
         return leafNode.getChildren().get(0);
     }
 
-    private static Node rollout(Side mySide, Node node, long timeAllowed) {
+    private static Node rollout(Node node, long timeAllowed) {
         Board board = node.getBoard();
         if (Kalah.gameOver(board)) {
             node.setNoOfVisits(1);
@@ -82,9 +83,7 @@ public class Main {
         Board simulateBoard = new Board(board);
         Side turn = Kalah.makeMove(simulateBoard, randMove);
         Node simulateNode = new Node(0, 0, randMove.getSide(), turn, randMove, simulateBoard, node, new ArrayList<>());
-        rollout(mySide, simulateNode, timeAllowed);
-        // should not get here
-        return null;
+        return rollout(simulateNode, timeAllowed);
     }
 
     private static void backPropagation(Node node) {
@@ -99,34 +98,42 @@ public class Main {
             backPropagation(parent, payoff);
     }
 
-    private static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
+    private static Move MCTSNextMove(Board board, long timeAllowed) {
         int generation = 0;
         final int GEN_LIMIT = 200;
 
         // Side should be me, not the opponent.
         long startTime = System.currentTimeMillis();
         long endTime = startTime + timeAllowed;
-        Tree tree = new Tree();
-        Node root = tree.getRoot();
-        root.setBoard(board);
-        root.setSide(side.opposite());
+
+        Node root = new Node(0, 0, Side.NORTH, mySide, null, board, null, new ArrayList<>());
 
         while (System.currentTimeMillis() < endTime && generation < GEN_LIMIT) {
             generation++;
 
+            System.err.println("Generation: " + generation);
+            System.err.println("Start Selection");
             // Selection.
             Node selectedNode = selection(root);
+            System.err.println("End Selection");
+
             if (Kalah.gameOver(selectedNode.getBoard()))
                 break;
 
+            System.err.println("Start Expansion");
             // Expansion.
             Node nodeToExplore = expand(selectedNode);
+            System.err.println("End Expansion");
 
+            System.err.println("Start Rollout");
             // Rollout.
-            Node rolloutNode = rollout(side, nodeToExplore, timeAllowed);
+            Node rolloutNode = rollout(nodeToExplore, timeAllowed);
+            System.err.println("End Rollout");
 
+            System.err.println("Start Backpropagation");
             // Backpropagation.
             backPropagation(rolloutNode);
+            System.err.println("End Backpropagation");
         }
 
         // We need the move that leads to the best result.
@@ -147,6 +154,7 @@ public class Main {
 
         long timeAllowed = 1000;
 
+
         try {
             String msg = recvMsg();
             MsgType msg_type = Protocol.getMessageType(msg);
@@ -162,12 +170,14 @@ public class Main {
                     System.err.println("Starting player? " + south);
                     if(south)
                     {
-                        my_side = Side.SOUTH;
+                        mySide = Side.SOUTH;
+                        oppSide = Side.NORTH;
                         sendMsg(Protocol.createMoveMsg(1));
                     }
                     else
                     {
-                        my_side = Side.NORTH;
+                        mySide = Side.NORTH;
+                        oppSide = Side.SOUTH;
                         may_swap = true;
                     }
                     break;
@@ -192,10 +202,11 @@ public class Main {
                 if (msg_type != MsgType.STATE)
                     throw new InvalidMessageException("State message expected");
 
-                Protocol.MoveTurn r = Protocol.interpretStateMsg (msg, kalah.getBoard());
+                Protocol.MoveTurn r = Protocol.interpretStateMsg(msg, kalah.getBoard());
 
                 if (r.move == -1) {
-                    my_side = my_side.opposite();
+                    mySide = mySide.opposite();
+                    oppSide = oppSide.opposite();
                 }
 
 
@@ -204,7 +215,9 @@ public class Main {
                 }
 
                 // Calculate next move using MCTS
-                Move next_move = MCTSNextMove(kalah.getBoard(), my_side, timeAllowed);
+                Move next_move = MCTSNextMove(kalah.getBoard(), timeAllowed);
+                if (!Kalah.isLegalMove(kalah.getBoard(), next_move))
+                    System.out.println("??");
 
                 msg = Protocol.createMoveMsg(next_move.getHole());
 
@@ -217,18 +230,13 @@ public class Main {
                     Kalah.makeMove(move_board, next_move);
 
 
-                    int original_payoff = kalah.getBoard().payoffs(my_side);
-                    //System.err.println("op: " + kalah.getBoard() + "payoff : " + original_payoff);
-                    int after_swap_payoff = move_board.payoffs(my_side.opposite());
-                    //System.err.println("swap" + move_board + "pay off + " + after_swap_payoff);
+                    int original_payoff = kalah.getBoard().payoffs(mySide);
+                    int after_swap_payoff = move_board.payoffs(oppSide);
 
-                    System.err.println();
-                    System.err.println("1" + msg);
                     if (after_swap_payoff >= original_payoff)
                     {
-                        my_side = my_side.opposite();
-                        msg = Protocol.createSwapMsg();
-                        //System.err.println("2" + msg);
+                        mySide = mySide.opposite();
+                        oppSide = oppSide.opposite();
                     }
                 }
                 may_swap = false;

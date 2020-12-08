@@ -10,6 +10,7 @@ public class Node implements Comparable<Node> {
     // Describes whose decision leads to this node.
     private Side side;
     private Side whosTurnNext;
+    private boolean root = false;
 
     private Node parent;
     private Board board;
@@ -148,6 +149,14 @@ public class Node implements Comparable<Node> {
 
     public Side getWhosTurnNext() {
         return whosTurnNext;
+    }
+
+    public boolean isRoot() {
+        return root;
+    }
+
+    public void setRoot(Boolean root) {
+        this.root = root;
     }
 
     public Double getUCTValue() {
