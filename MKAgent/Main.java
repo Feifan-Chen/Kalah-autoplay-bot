@@ -59,22 +59,44 @@ public class Main {
         Board board = leafNode.getBoard();
         for (int i = 1; i <= board.getNoOfHoles(); i++) {
             Board nodeBoard = new Board(board);
-            Move nodeMove = new Move(leafNode.getSide().opposite(), i);
+            Move nodeMove = new Move(leafNode.getWhosTurnNext(), i);
             if (Kalah.isLegalMove(nodeBoard, nodeMove)) {
-                Kalah.makeMove(nodeBoard, nodeMove);
-                Node child = new Node(0, 0, nodeMove.getSide(), nodeMove, nodeBoard, leafNode, new ArrayList<>());
+                Side turn = Kalah.makeMove(nodeBoard, nodeMove);
+                Node child = new Node(0, 0, nodeMove.getSide(), turn, nodeMove, nodeBoard, leafNode, new ArrayList<>());
                 leafNode.addChild(child);
             }
         }
         return leafNode.getChildren().get(0);
     }
 
-    private static int rollout(Node node, long timeAllowed) {
-        return 0;
+    private static Node rollout(Side mySide, Node node, long timeAllowed) {
+        Board board = node.getBoard();
+        if (Kalah.gameOver(board)) {
+            node.setNoOfVisits(1);
+            node.setTotalScore(board.payoffs(mySide));
+            return node;
+        }
+
+        ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, node.getWhosTurnNext());
+        Move randMove = legalMoves.get(new Random().nextInt(legalMoves.size()));
+        Board simulateBoard = new Board(board);
+        Side turn = Kalah.makeMove(simulateBoard, randMove);
+        Node simulateNode = new Node(0, 0, randMove.getSide(), turn, randMove, simulateBoard, node, new ArrayList<>());
+        rollout(mySide, simulateNode, timeAllowed);
+        // should not get here
+        return null;
     }
 
-    private static void backPropagation(Node node, int payoff, Node root) {
+    private static void backPropagation(Node node) {
+        backPropagation(node.getParent(), node.getTotalScore());
+    }
 
+    private static void backPropagation(Node node, int payoff) {
+        node.setNoOfVisits(node.getNoOfVisits() + 1);
+        node.setTotalScore(node.getTotalScore() + payoff);
+        Node parent = node.getParent();
+        if (parent != null)
+            backPropagation(parent, payoff);
     }
 
     private static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
@@ -101,10 +123,10 @@ public class Main {
             Node nodeToExplore = expand(selectedNode);
 
             // Rollout.
-            int payoff = rollout(nodeToExplore, timeAllowed);
+            Node rolloutNode = rollout(side, nodeToExplore, timeAllowed);
 
             // Backpropagation.
-            backPropagation(nodeToExplore, payoff, root);
+            backPropagation(rolloutNode);
         }
 
         // We need the move that leads to the best result.

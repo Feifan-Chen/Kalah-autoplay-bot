@@ -9,6 +9,7 @@ public class Node implements Comparable<Node> {
 
     // Describes whose decision leads to this node.
     private Side side;
+    private Side whosTurnNext;
 
     private Node parent;
     private Board board;
@@ -24,12 +25,13 @@ public class Node implements Comparable<Node> {
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side side, Move move, Board board, Node parent, ArrayList<Node> children) {
+    public Node(int noOfVisits, int totalScore, Side side, Side whosTurnNext, Move move, Board board, Node parent, ArrayList<Node> children) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
         this.board = new Board(board);
         this.move = move;
         this.side = side;
+        this.whosTurnNext = whosTurnNext;
         this.parent = parent;
         this.children = children;
     }
@@ -43,6 +45,7 @@ public class Node implements Comparable<Node> {
         this.children = new ArrayList<>();
         this.children.addAll(node.children);
         this.side = node.side;
+        this.whosTurnNext = node.whosTurnNext;
         this.move = node.move;
     }
 
@@ -137,6 +140,14 @@ public class Node implements Comparable<Node> {
 
     public Move getMove() {
         return this.move;
+    }
+
+    public void setWhosTurnNext(Side whosTurnNext) {
+        this.whosTurnNext = whosTurnNext;
+    }
+
+    public Side getWhosTurnNext() {
+        return whosTurnNext;
     }
 
     public Double getUCTValue() {
