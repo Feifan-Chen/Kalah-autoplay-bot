@@ -60,6 +60,14 @@ public class Node implements Comparable<Node> {
         return getRootVisit(parent);
     }
 
+    public double getMax() {
+        return (double)totalScore/noOfVisits;
+    }
+
+    public double getRobust() {
+        return noOfVisits;
+    }
+
     public void addChild(Node child) {
         this.children.add(child);
     }
@@ -148,6 +156,9 @@ public class Node implements Comparable<Node> {
     }
 
     public Double getUCTValue() {
+        if (Kalah.gameOver(board))
+            return (double)0;
+
         if (noOfVisits == 0)
             return Double.MAX_VALUE;
 

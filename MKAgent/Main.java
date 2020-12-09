@@ -71,6 +71,9 @@ public class Main {
                 leafNode.addChild(child);
             }
         }
+
+        if (leafNode.getChildren().size() == 0)
+            return leafNode;
         return leafNode.getChildren().get(new Random().nextInt(leafNode.getChildren().size()));
     }
 
@@ -106,8 +109,8 @@ public class Main {
 
     private static Node getBestChild(ArrayList<Node> children) {
         return Collections.max(children, (first, second) -> {
-            double firstReward = (double)first.getTotalScore()/first.getNoOfVisits();
-            double secondReward = (double)second.getTotalScore()/second.getNoOfVisits();
+            double firstReward = first.getRobust();
+            double secondReward = second.getRobust();
             if (firstReward > secondReward)
                 return 1;
             else if (firstReward < secondReward)
@@ -118,7 +121,7 @@ public class Main {
 
     private static Move MCTSNextMove(Board board, long timeAllowed) {
         int generation = 0;
-        final int GEN_LIMIT = 10000;
+        final int GEN_LIMIT = 1000000;
 
         long endTime = System.currentTimeMillis() + timeAllowed*100;
 
@@ -129,9 +132,6 @@ public class Main {
 
             // Selection.
             Node nodeToExplore = selection(root);
-
-            if (Kalah.gameOver(nodeToExplore.getBoard()))
-                continue;
 
             // Rollout.
             rollout(nodeToExplore, timeAllowed);
