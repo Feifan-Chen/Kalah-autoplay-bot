@@ -8,7 +8,7 @@ public class UCT {
         if (noOfVisits == 0)
             return Integer.MAX_VALUE;
 
-        return (totalScore / (double)noOfVisits + Math.sqrt(2 * Math.log(noOfTotalVisits) / (double)noOfVisits));
+        return (totalScore / (double)noOfVisits + 2 * Math.sqrt(Math.log(noOfTotalVisits) / (double)noOfVisits));
     }
 
     public static Node chooseBestUCTNode(Node parent) {
