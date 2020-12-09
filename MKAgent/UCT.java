@@ -6,7 +6,7 @@ public class UCT {
 
     public static double getUCTValue(int noOfTotalVisits, int totalScore, int noOfVisits) {
         if (noOfVisits == 0)
-            return Integer.MAX_VALUE;
+            return Double.MAX_VALUE;
 
         return (totalScore / (double)noOfVisits + 2 * Math.sqrt(Math.log(noOfTotalVisits) / (double)noOfVisits));
     }
