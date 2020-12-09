@@ -16,28 +16,34 @@ public class Node {
     private int totalScore;
     private ArrayList<Node> children;
 
+    // is kind 2 greedy
+    private boolean greedy;
+
     public Node() {
         move = null;
         this.noOfVisits = 0;
         this.totalScore = 0;
+        this.greedy = false;
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side side, Move move, Board board) {
+    public Node(int noOfVisits, int totalScore, Side side, Move move, boolean greedy, Board board) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
         this.board = new Board(board);
         this.move = move;
         this.side = side;
+        this.greedy = false;
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side side, Move move, Board board, Node parent, ArrayList<Node> children) {
+    public Node(int noOfVisits, int totalScore, Side side, Move move,boolean greedy, Board board, Node parent, ArrayList<Node> children) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
         this.board = new Board(board);
         this.move = move;
         this.side = side;
+        this.greedy = false;
         this.parent = parent;
         this.children = children;
     }
@@ -52,7 +58,9 @@ public class Node {
         this.children.addAll(node.children);
         this.side = node.side;
         this.move = node.move;
+        this.greedy = node.greedy;
     }
+
 
     public void addChild(Node child) {
         this.children.add(child);
@@ -121,70 +129,42 @@ public class Node {
 
     public void expand() {
         children = new ArrayList<>();
-        ArrayList<Node> not_greedy_children = new ArrayList<>();
 
         for (int i = 0; i < board.getNoOfHoles(); i++) {
             Board nodeBoard = new Board(board);
-            //System.err.println("board " + board);
-           // System.err.println("nodeBoard " + nodeBoard);
             Move nodeMove = new Move(side.opposite(), i + 1);
-            if (Kalah.isLegalMove(nodeBoard, nodeMove)) {
-                //System.err.println("check");
-                boolean is_greedy = is_greedy_child(nodeBoard, nodeMove);
-                Kalah.makeMove(nodeBoard, nodeMove);
-                Node child = new Node(0, 0, side.opposite(), nodeMove, nodeBoard, this, new ArrayList<>());
-                //System.err.println("children board " + child.getBoard());
-                if (is_greedy)
-                    children.add(child);
 
-                not_greedy_children.add(child);
+            if (Kalah.isLegalMove(nodeBoard, nodeMove))
+            {
+                Node child;
+                // Greedy is an unusual move, so assuming opponent's decision leads to this move.
+                boolean is_greedy = isKind1GreedyChild(board, side.opposite(), nodeMove.getHole());
+
+                boolean is2_greedy = isKind2GreedyChild(board, side.opposite(), nodeMove.getHole());
+
+                if (is_greedy)
+                {
+                    Move greedyMove = new Move(side, nodeMove.getHole());
+                    Kalah.makeMove(nodeBoard, greedyMove);
+
+                    child = new Node(0,0,side,nodeMove,false,nodeBoard,this, new ArrayList<>());
+                }
+                else if (is2_greedy)
+                {
+                    Move greedy2Move = new Move(side, nodeMove.getHole());
+                    Kalah.makeMove(nodeBoard, greedy2Move);
+
+                    child = new Node(0,0,side,nodeMove,true,nodeBoard,this, new ArrayList<>());
+                }
+                else
+                {
+                    Kalah.makeMove(nodeBoard, nodeMove);
+                    child = new Node(0, 0, side.opposite(), nodeMove, false, nodeBoard, this, new ArrayList<>());
+                }
+
+                children.add(child);
             }
         }
-
-        //System.err.println("greedy size "  + not_greedy_children.size());
-        if(children.size() == 0)
-            children = not_greedy_children;
-
-        //System.err.println("children size "  + children.size());
-
-    }
-
-    public boolean is_greedy_child(Board board, Move move)
-    {
-        // If the seeds in the hole equal to the 8-move
-        // means this move will have another turn.
-        if (board.getSeeds(move.getSide(), move.getHole()) == (8 - move.getHole()))
-            return true;
-        else
-            return false;
-    }
-
-    public ArrayList<Node> checkAvailableChildren(){
-        ArrayList<Node> children = getChildren();
-        ArrayList<Node> available = new ArrayList<>();
-        for(Node child : children) {
-            if (child.getNoOfVisits() == 0)
-                available.add(child);
-        }
-        return available;
-    }
-
-    public void setMove(Move move) {
-        this.move = move;
-    }
-
-    public Move getMove() {
-        return this.move;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        Node node = (Node) o;
-        return Objects.equals(move, node.move) &&
-                side == node.side &&
-                Objects.equals(parent, node.parent) &&
-                Objects.equals(board, node.board);
     }
 
     public static boolean isKind1GreedyChild(Board board, Side side, int hole) {
@@ -212,4 +192,43 @@ public class Node {
             return false;
         return board.getSeeds(side, endHole) == 0 && board.getSeedsOp(side, endHole) > 0;
     }
+
+
+    public ArrayList<Node> checkAvailableChildren(){
+        ArrayList<Node> children = getChildren();
+        ArrayList<Node> available = new ArrayList<>();
+        for(Node child : children) {
+            if (child.getNoOfVisits() == 0)
+                available.add(child);
+        }
+        return available;
+    }
+
+    public void setMove(Move move) {
+        this.move = move;
+    }
+
+    public Move getMove() {
+        return this.move;
+    }
+
+    public boolean getGreedy(){
+        return this.greedy;
+    }
+    public void setGreedy(boolean greedy){
+        this.greedy = greedy;
+    }
+
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Node node = (Node) o;
+        return Objects.equals(move, node.move) &&
+                side == node.side &&
+                Objects.equals(parent, node.parent) &&
+                Objects.equals(board, node.board);
+    }
+
 }

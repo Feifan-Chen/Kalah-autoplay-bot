@@ -47,6 +47,8 @@ public class Main {
         return message.toString();
     }
 
+
+
     private static Node selection(Node node) {
         Node ret = node;
 
@@ -65,22 +67,14 @@ public class Main {
 //CHANGE;1;7,7,7,7,7,7,7,0,0,8,8,8,8,8,8,1;YOU
     private static Node expand(Node parent) {
         if (parent.getNoOfVisits() == 1)
-        {
-        //    System.err.println("parent " + parent);
-            parent.expand();
+                parent.expand();
           //  System.err.println("parent children size " + parent.getChildren().size());
-        }
-
 
         ArrayList<Node> children = parent.getChildren();
         //System.err.println(children.size());
         for (Node node: children)
             if (node.getNoOfVisits() == 0)
-            {
                 return node;
-            }
-
-
 
         return parent.getRandomChild();
 
@@ -124,34 +118,127 @@ public class Main {
             //System.err.println(board);
         }
 
-        if(my_side.equals(side))
-            return board.payoffs(side);
-        else
-            return board.payoffs(side.opposite());
+        return board.payoffs(my_side);
+
+//        if (board.payoffs(my_side) > 0)
+//            return 1;
+//        else
+//            return 0;
     }
+
+/*
+    // Playgame - each layer is a move.
+    private static int minimax_pruning(Node node, int alpha, int beta, int depth, Side my_side)
+    {
+        int payoff = 0;
+        if (depth == 0 || Kalah.gameOver(node.getBoard()))
+            return node.getTotalScore();
+
+        // Max node
+        if (node.getSide().opposite().equals(my_side))
+        {
+            int max = Integer.MIN_VALUE;
+
+            ArrayList<Node> children = node.getChildren();
+            for(Node child :children)
+                payoff = minimax_pruning(child, alpha, beta, depth - 1, my_side.opposite());
+
+            max = Integer.max(max, payoff);
+
+            alpha = Integer.max(alpha, max);
+
+            if(beta <= alpha)
+                break;
+
+            return max;
+
+        }
+        else
+        {
+            int min = Integer.MAX_VALUE;
+
+            ArrayList<Node> children = node.getChildren();
+
+            for(Node child :children)
+                payoff = minimax_pruning(child, alpha, beta, depth - 1, my_side);
+
+            min = Integer.min(min, payoff);
+
+            alpha = Integer.min(beta, min);
+
+            if(beta <= alpha)
+                break;
+
+            return min;
+
+        }
+    }
+*/
+    /*
+    public Best chooseMove(final boolean side, final int[] board,
+                           int alpha, int beta, final int depth, final int maxDepth)
+    {
+        final Best myBest = new Best();
+        Best reply;
+        final int num;
+
+        if (Board.checkGameOver(board) || depth == maxDepth) {
+            final Best fakeBest = new Best();
+            fakeBest.setScore(returnPositionScore(board));
+            return fakeBest;
+        }
+
+        if (side) {
+            myBest.setScore(alpha);
+            num = numberOfEngine;
+        } else {
+            myBest.setScore(beta);
+            num = numberOfOpponent;
+        }
+
+        for (final int move: searchAvailableMoves(board)) {
+            board[move] = num;
+            reply = chooseMove(!side, board, alpha, beta, depth + 1, maxDepth);
+            board[move] = 0;
+            if (side && reply.getScore() > myBest.getScore()) {
+                myBest.setMove(move);
+                myBest.setScore(reply.getScore());
+                alpha = reply.getScore();
+
+            } else if (!side && reply.getScore() < myBest.getScore()) {
+                myBest.setMove(move);
+                myBest.setScore(reply.getScore());
+                beta = reply.getScore();
+
+            }
+            if (alpha >= beta) {
+                return myBest;
+            }
+        }
+
+        return myBest;
+    }
+
+*/
 
     private static void backPropagation(Node node, int payoff, Node root) {
         //while it is not back to the root, update payoff value and increase
         Node currentNode = node;
-        int count = 0;
+        int double_payoff = payoff*payoff;
         do {
-            count ++;
             //System.err.println("before backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
             currentNode.incrementOneVisit();
             //System.err.println("backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
-            if(currentNode.getSide() == node.getSide() )
-                currentNode.incrementScore(payoff);
+            if(currentNode.getSide() == node.getSide() ){
+                if(currentNode.getGreedy())
+                    currentNode.incrementScore(double_payoff);
+            }
             currentNode = currentNode.getParent();
+            //System.err.println(currentNode.getTotalScore());
         }
         while (!currentNode.equals(root));
 
-
         currentNode.incrementOneVisit();
-        //System.err.println("backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
-        if(currentNode.getSide() == node.getSide() )
-            currentNode.incrementScore(payoff);
-        currentNode = currentNode.getParent();
-
 
      //   System.err.println("COunt" + count);
         //reward delay method.
@@ -178,6 +265,7 @@ public class Main {
         root.setNoOfVisits(1);
         root.setBoard(board);
         root.setSide(opposite);
+        root.setGreedy(false);
 
         while (System.currentTimeMillis() < endTime) {
             // Selection.
@@ -195,7 +283,9 @@ public class Main {
          //  System.err.println("nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
 
             // Simulation.
-            int payoff = simulate(nodeToExplore, timeAllowed);
+            int payoff = 0;
+            for (int i = 0; i< 15; i++)
+                payoff += simulate(nodeToExplore, timeAllowed);
 
             // Backpropagation.
             backPropagation(nodeToExplore, payoff, root);
@@ -220,7 +310,7 @@ public class Main {
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 1000;
+        long timeAllowed = 1000*30;
 
         try {
             String msg = recvMsg();
