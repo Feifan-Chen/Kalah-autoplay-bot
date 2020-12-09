@@ -297,7 +297,7 @@ public class Board extends Observable implements Cloneable
 			this_seeds += getSeeds(side, i);
 			opp_seeds += getSeeds(side.opposite(), i);
 		}
-		return  this_seeds - opp_seeds;
+		return this_seeds - opp_seeds;
 	}
 
 }

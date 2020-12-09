@@ -109,8 +109,8 @@ public class Main {
 
     private static Node getBestChild(ArrayList<Node> children) {
         return Collections.max(children, (first, second) -> {
-            double firstReward = first.getRobust();
-            double secondReward = second.getRobust();
+            double firstReward = first.getMax();
+            double secondReward = second.getMax();
             if (firstReward > secondReward)
                 return 1;
             else if (firstReward < secondReward)
@@ -121,9 +121,9 @@ public class Main {
 
     private static Move MCTSNextMove(Board board, long timeAllowed) {
         int generation = 0;
-        final int GEN_LIMIT = 1000000;
+        final int GEN_LIMIT = 100;
 
-        long endTime = System.currentTimeMillis() + timeAllowed*100;
+        long endTime = System.currentTimeMillis() + timeAllowed;
 
         Node root = new Node(0, 0, null, mySide, null, board, null, new ArrayList<>());
 
