@@ -47,6 +47,22 @@ public class Main {
         return message.toString();
     }
 
+    public static boolean isGreedyChild(Board board, Side side, int hole) {
+        /*计分板 hole7 hole6 hole5 hole4 hole3 hole2 hole1
+                hole1 hole2 hole3 hole4 hole5 hole6 hole7 计分板
+         */
+        int noOfSeeds = board.getSeeds(side, hole);
+        if (noOfSeeds <= 7) {
+            return noOfSeeds + hole == 8;
+        }
+        else if (noOfSeeds >= 16) {
+            return noOfSeeds % 16 + 1 + hole == 8;
+        }
+        else
+            // 7和16之间一定不会出现greedy child
+            return false;
+    }
+
     private static Node selection(Node node) {
         Node ret = node;
 
