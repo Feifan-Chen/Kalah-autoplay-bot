@@ -52,8 +52,11 @@ public class Main {
     }
 
     private static Node selection(Node node) {
-        if (Node.isLeafNode(node))
-            return node;
+        if (node.isLeafNode()) {
+            if (node.getNoOfVisits() == 0)
+                return node;
+            return expand(node);
+        }
         return selection(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
     }
 
@@ -68,7 +71,7 @@ public class Main {
                 leafNode.addChild(child);
             }
         }
-        return leafNode.getChildren().get(0);
+        return leafNode.getChildren().get(new Random().nextInt(leafNode.getChildren().size()));
     }
 
     private static Node rollout(Node node, long timeAllowed) {
@@ -94,10 +97,8 @@ public class Main {
     }
 
     private static void backPropagation(Node node, int payoff) {
-        if (node.getSide() == mySide) {
-            node.setNoOfVisits(node.getNoOfVisits() + 1);
-            node.setTotalScore(node.getTotalScore() + payoff);
-        }
+        node.setNoOfVisits(node.getNoOfVisits() + 1);
+        node.setTotalScore(node.getTotalScore() + payoff);
         Node parent = node.getParent();
         if (parent != null)
             backPropagation(parent, payoff);
@@ -117,9 +118,9 @@ public class Main {
 
     private static Move MCTSNextMove(Board board, long timeAllowed) {
         int generation = 0;
-        final int GEN_LIMIT = 100;
+        final int GEN_LIMIT = 10000;
 
-        long endTime = System.currentTimeMillis() + timeAllowed;
+        long endTime = System.currentTimeMillis() + timeAllowed*100;
 
         Node root = new Node(0, 0, null, mySide, null, board, null, new ArrayList<>());
 
@@ -127,29 +128,17 @@ public class Main {
             generation++;
 
             // Selection.
-            Node selectedNode = selection(root);
+            Node nodeToExplore = selection(root);
 
-            Node nodeToExplore = selectedNode;
-            // Expansion.
-            if (selectedNode.getNoOfVisits() == 0)
-                nodeToExplore = expand(selectedNode);
+            if (Kalah.gameOver(nodeToExplore.getBoard()))
+                continue;
 
             // Rollout.
             rollout(nodeToExplore, timeAllowed);
-
-//            // Backpropagation.
-//            backPropagation(rolloutNode);
         }
 
         // We need the move that leads to the best result.
         ArrayList<Node> children = root.getChildren();
-//        ArrayList<Node> bestChildren = new ArrayList<>();
-//        for (Node child : children) {
-//            if (child.getWhosTurnNext() == mySide)
-//                bestChildren.add(child);
-//        }
-//        if (bestChildren.size() > 0)
-//            children = bestChildren;
         Node best_child = getBestChild(children);
         return best_child.getMove();
     }

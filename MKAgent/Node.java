@@ -49,8 +49,8 @@ public class Node implements Comparable<Node> {
         this.move = node.move;
     }
 
-    public static boolean isLeafNode(Node node) {
-        return node.children.size() == 0;
+    public boolean isLeafNode() {
+        return this.children.size() == 0;
     }
 
     public static int getRootVisit(Node node) {
