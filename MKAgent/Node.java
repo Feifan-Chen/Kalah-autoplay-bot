@@ -152,7 +152,7 @@ public class Node implements Comparable<Node> {
             return Double.MAX_VALUE;
 
         /*
-            UCB(Si) = avg(Vi) + c*sqrt(logN/ni)
+            UCB(Si) = avg(Vi) + c*sqrt(ln(N)/ni)
             Vi is average value of its children nodes
             c is constant (usually 2)
             N is total number of visits

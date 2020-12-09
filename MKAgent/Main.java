@@ -94,18 +94,32 @@ public class Main {
     }
 
     private static void backPropagation(Node node, int payoff) {
-        node.setNoOfVisits(node.getNoOfVisits() + 1);
-        node.setTotalScore(node.getTotalScore() + payoff);
+        if (node.getSide() == mySide) {
+            node.setNoOfVisits(node.getNoOfVisits() + 1);
+            node.setTotalScore(node.getTotalScore() + payoff);
+        }
         Node parent = node.getParent();
         if (parent != null)
             backPropagation(parent, payoff);
     }
 
+    private static Node getBestChild(ArrayList<Node> children) {
+        return Collections.max(children, (first, second) -> {
+            double firstReward = (double)first.getTotalScore()/first.getNoOfVisits();
+            double secondReward = (double)second.getTotalScore()/second.getNoOfVisits();
+            if (firstReward > secondReward)
+                return 1;
+            else if (firstReward < secondReward)
+                return -1;
+            return 0;
+        });
+    }
+
     private static Move MCTSNextMove(Board board, long timeAllowed) {
         int generation = 0;
-        final int GEN_LIMIT = 20000;
+        final int GEN_LIMIT = 100000;
 
-        long endTime = System.currentTimeMillis() + timeAllowed*10000000;
+        long endTime = System.currentTimeMillis() + timeAllowed;
 
         Node root = new Node(0, 0, null, mySide, null, board, null, new ArrayList<>());
 
@@ -128,15 +142,15 @@ public class Main {
         }
 
         // We need the move that leads to the best result.
-        Node best_child = Collections.max(root.getChildren(), (first, second) -> {
-            double firstReward = (double)first.getTotalScore()/first.getNoOfVisits();
-            double secondReward = (double)second.getTotalScore()/second.getNoOfVisits();
-            if (firstReward > secondReward)
-                return 1;
-            else if (firstReward < secondReward)
-                return -1;
-            return 0;
-        });
+        ArrayList<Node> children = root.getChildren();
+        ArrayList<Node> bestChildren = new ArrayList<>();
+        for (Node child : children) {
+            if (child.getWhosTurnNext() == mySide)
+                bestChildren.add(child);
+        }
+        if (bestChildren.size() > 0)
+            children = bestChildren;
+        Node best_child = getBestChild(children);
         return best_child.getMove();
     }
 
@@ -146,7 +160,6 @@ public class Main {
      */
     public static void main(String[] args)
     {
-        Side my_side = null;
         boolean may_swap = false;
 
         // Record the board locally.
@@ -158,32 +171,32 @@ public class Main {
             String msg = recvMsg();
             MsgType msg_type = Protocol.getMessageType(msg);
 
-            // Start of the game.
-            switch (msg_type)
-            {
-                // Determine who is on which side.
-                // If this side is South, then make a move first;
-                // If this side is North, then enable may_swap.
-                case START: System.err.println("A start.");
+            /*
+             Start of the game.
+             Determine who is on which side.
+             If this side is South, then make a move first;
+             If this side is North, then enable may_swap.
+            */
+            switch (msg_type) {
+                case START -> {
+                    System.err.println("A start.");
                     boolean south = Protocol.interpretStartMsg(msg);
                     System.err.println("Starting player? " + south);
-                    if(south)
-                    {
+                    if (south) {
                         mySide = Side.SOUTH;
                         oppSide = Side.NORTH;
                         sendMsg(Protocol.createMoveMsg(1));
-                    }
-                    else
-                    {
+                    } else {
                         mySide = Side.NORTH;
                         oppSide = Side.SOUTH;
                         may_swap = true;
                     }
-                    break;
-                case END: System.err.println("An end. Bye bye!"); return;
-                default:
-                    System.err.println("State message expected");
-                    break;
+                }
+                case END -> {
+                    System.err.println("An end. Bye bye!");
+                    return;
+                }
+                default -> System.err.println("State message expected");
             }
 
             // Continues the game
@@ -212,34 +225,21 @@ public class Main {
                     continue;
                 }
 
-                // Calculate next move using MCTS
-                Move next_move = MCTSNextMove(kalah.getBoard(), timeAllowed);
-
-                msg = Protocol.createMoveMsg(next_move.getHole());
-
-                // If North side, decide whether to swap by:
-                // simulate the next payoff, and calculate the payoff of opp-player,
-                // if that payoff is greater, then create swap message.
                 if (may_swap)
                 {
-                    Board move_board = new Board(kalah.getBoard());
-                    Kalah.makeMove(move_board, next_move);
-
-
-                    int original_payoff = kalah.getBoard().payoffs(mySide);
-                    int after_swap_payoff = kalah.getBoard().payoffs(oppSide);
-
-                    if (after_swap_payoff >= original_payoff)
-                    {
-                        mySide = mySide.opposite();
-                        oppSide = oppSide.opposite();
-                    }
+                    mySide = mySide.opposite();
+                    oppSide = oppSide.opposite();
+                    sendMsg(Protocol.createSwapMsg());
+                    may_swap = false;
+                    continue;
                 }
-                may_swap = false;
+
+                // Calculate next move using MCTS
+                Move next_move = MCTSNextMove(kalah.getBoard(), timeAllowed);
+                msg = Protocol.createMoveMsg(next_move.getHole());
 
                 // send message to game engine.
                 sendMsg(msg);
-                System.err.println(msg);
             }
         }
         catch (InvalidMessageException e) {
