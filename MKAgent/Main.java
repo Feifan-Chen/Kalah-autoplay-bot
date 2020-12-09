@@ -183,15 +183,15 @@ public class Main {
             // Selection.
             //System.err.println("root " + root + " visit " + root.getNoOfVisits());
             Node selectedNode = selection(root);
-            if (Kalah.gameOver(selectedNode.getBoard()))
-                break;
+            Node nodeToExplore = selectedNode;
+            if (!Kalah.gameOver(selectedNode.getBoard()))
+                nodeToExplore = expand(selectedNode);
          //   System.err.println("selection board" + selectedNode.getBoard());
           //  System.err.println("selection " + selectedNode + "visit " + selectedNode.getNoOfVisits());
            // System.err.println("num of visit" + selectedNode.getNoOfVisits() + "total score: " + selectedNode.getTotalScore());
           //  System.err.println("Node" + selectedNode);
            // System.err.println("sum of visit" + selectedNode.getNoOfVisits());
             // Expansion.
-            Node nodeToExplore = expand(selectedNode);
          //  System.err.println("nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
 
             // Simulation.
