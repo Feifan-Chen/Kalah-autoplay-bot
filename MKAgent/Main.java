@@ -117,7 +117,7 @@ public class Main {
 
     private static Move MCTSNextMove(Board board, long timeAllowed) {
         int generation = 0;
-        final int GEN_LIMIT = 100000;
+        final int GEN_LIMIT = 100;
 
         long endTime = System.currentTimeMillis() + timeAllowed;
 
@@ -143,13 +143,13 @@ public class Main {
 
         // We need the move that leads to the best result.
         ArrayList<Node> children = root.getChildren();
-        ArrayList<Node> bestChildren = new ArrayList<>();
-        for (Node child : children) {
-            if (child.getWhosTurnNext() == mySide)
-                bestChildren.add(child);
-        }
-        if (bestChildren.size() > 0)
-            children = bestChildren;
+//        ArrayList<Node> bestChildren = new ArrayList<>();
+//        for (Node child : children) {
+//            if (child.getWhosTurnNext() == mySide)
+//                bestChildren.add(child);
+//        }
+//        if (bestChildren.size() > 0)
+//            children = bestChildren;
         Node best_child = getBestChild(children);
         return best_child.getMove();
     }
@@ -178,7 +178,7 @@ public class Main {
              If this side is North, then enable may_swap.
             */
             switch (msg_type) {
-                case START -> {
+                case START:
                     System.err.println("A start.");
                     boolean south = Protocol.interpretStartMsg(msg);
                     System.err.println("Starting player? " + south);
@@ -191,12 +191,13 @@ public class Main {
                         oppSide = Side.SOUTH;
                         may_swap = true;
                     }
-                }
-                case END -> {
+                    break;
+                case END:
                     System.err.println("An end. Bye bye!");
                     return;
-                }
-                default -> System.err.println("State message expected");
+                default:
+                    System.err.println("State message expected");
+                    break;
             }
 
             // Continues the game
