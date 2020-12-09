@@ -186,4 +186,30 @@ public class Node {
                 Objects.equals(parent, node.parent) &&
                 Objects.equals(board, node.board);
     }
+
+    public static boolean isKind1GreedyChild(Board board, Side side, int hole) {
+        /*计分板 hole7 hole6 hole5 hole4 hole3 hole2 hole1
+                hole1 hole2 hole3 hole4 hole5 hole6 hole7 计分板
+         */
+        int noOfSeeds = board.getSeeds(side, hole);
+        if (noOfSeeds <= 7) {
+            return noOfSeeds + hole == 8;
+        }
+        else if (noOfSeeds >= 16) {
+            // 至少需要15个子才能转完一圈（转完后回到自身）。
+            return noOfSeeds % 15 + hole == 8;
+        }
+        else
+            // 7和16之间一定不会出现greedy child
+            return false;
+    }
+
+    public static boolean isKind2GreedyChild(Board board, Side side, int hole) {
+        int noOfSeeds = board.getSeeds(side, hole);
+        int endHole = noOfSeeds % 15 + hole;
+        if (endHole > 7)
+            // 注意 当endHole为8时，是Kind1GreedyChild
+            return false;
+        return board.getSeeds(side, endHole) == 0 && board.getSeedsOp(side, endHole) > 0;
+    }
 }
