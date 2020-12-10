@@ -100,8 +100,8 @@ public class Main {
 
     private static Node getMaxRobustChild(Node root) {
         ArrayList<Node> children = root.getChildren();
-        double maxReward = -1;
-        double maxVisited = -1;
+        double maxReward = Double.MIN_VALUE;
+        double maxVisited = Double.MIN_VALUE;
         for (Node child : children) {
             double childVisited = child.getNoOfVisits();
             double childReward = child.getTotalScore()/childVisited;
@@ -238,7 +238,7 @@ public class Main {
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 1000;
+        long timeAllowed = 200;
 
         try {
             String msg = recvMsg();
