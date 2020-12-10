@@ -100,8 +100,8 @@ public class Main {
 
     private static Node getMaxRobustChild(Node root) {
         ArrayList<Node> children = root.getChildren();
-        double maxReward = Double.MIN_VALUE;
-        double maxVisited = Double.MIN_VALUE;
+        double maxReward = -Double.MAX_VALUE;
+        double maxVisited = -1;
         for (Node child : children) {
             double childVisited = child.getNoOfVisits();
             double childReward = child.getTotalScore()/childVisited;
