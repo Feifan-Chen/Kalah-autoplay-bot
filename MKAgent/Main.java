@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Random;
 
 /**
@@ -96,6 +98,27 @@ public class Main {
 //            return greedy_children.getrandom();
     }
 
+    private static Node getMaxRobustChild(Node root) {
+        ArrayList<Node> children = root.getChildren();
+        double maxReward = -1;
+        double maxVisited = -1;
+        for (Node child : children) {
+            double childVisited = child.getNoOfVisits();
+            double childReward = child.getTotalScore()/childVisited;
+            if (childVisited > maxVisited)
+                maxVisited = childVisited;
+            if (childReward > maxReward)
+                maxReward = childReward;
+        }
+        for (Node child : children) {
+            double childVisited = child.getNoOfVisits();
+            double childReward = child.getTotalScore()/childVisited;
+            if (childVisited == maxVisited && childReward == maxReward)
+                return child;
+        }
+        return null;
+    }
+
     private static int simulate(Node give_node, long timeAllowed) {
 
         Node node = new Node(give_node);
@@ -179,20 +202,15 @@ public class Main {
         root.setBoard(board);
         root.setSide(opposite);
 
-        while (System.currentTimeMillis() < endTime) {
+        Node bestChild = null;
+
+        while (System.currentTimeMillis() < endTime || bestChild == null) {
             // Selection.
             //System.err.println("root " + root + " visit " + root.getNoOfVisits());
             Node selectedNode = selection(root);
             Node nodeToExplore = selectedNode;
             if (!Kalah.gameOver(selectedNode.getBoard()))
                 nodeToExplore = expand(selectedNode);
-         //   System.err.println("selection board" + selectedNode.getBoard());
-          //  System.err.println("selection " + selectedNode + "visit " + selectedNode.getNoOfVisits());
-           // System.err.println("num of visit" + selectedNode.getNoOfVisits() + "total score: " + selectedNode.getTotalScore());
-          //  System.err.println("Node" + selectedNode);
-           // System.err.println("sum of visit" + selectedNode.getNoOfVisits());
-            // Expansion.
-         //  System.err.println("nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
 
             // Simulation.
             int payoff = simulate(nodeToExplore, timeAllowed);
@@ -200,12 +218,12 @@ public class Main {
             // Backpropagation.
             backPropagation(nodeToExplore, payoff, root);
 
-         //   System.err.println("after selection " + selectedNode + "visit " + selectedNode.getNoOfVisits());
-           // System.err.println("after nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
+            if (System.currentTimeMillis() >= endTime)
+                bestChild = getMaxRobustChild(root);
         }
 
         // We need the move that leads to the best result.
-        return root.getBestChild().getMove();
+        return bestChild.getMove();
     }
 
     /**
