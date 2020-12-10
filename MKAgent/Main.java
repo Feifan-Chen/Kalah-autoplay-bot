@@ -126,7 +126,9 @@ public class Main {
 
         Node bestChild = null;
 
-        while (System.currentTimeMillis() < endTime || bestChild == null) {
+        boolean inLimit = true;
+        while (inLimit || bestChild == null) {
+            inLimit = System.currentTimeMillis() < endTime && generation < GEN_LIMIT;
             generation++;
 
             // Selection and Expansion.
@@ -135,7 +137,7 @@ public class Main {
             // Rollout and BackPropagation.
             rolloutAndBackPropagation(nodeToExplore, timeAllowed);
 
-            if (System.currentTimeMillis() >= endTime)
+            if (!inLimit)
                 bestChild = getMaxRobustChild(root);
         }
 
@@ -217,11 +219,13 @@ public class Main {
 
                 if (may_swap)
                 {
-                    mySide = mySide.opposite();
-                    oppSide = oppSide.opposite();
-                    sendMsg(Protocol.createSwapMsg());
                     may_swap = false;
-                    continue;
+                    if (r.move <= 2) {
+                        mySide = mySide.opposite();
+                        oppSide = oppSide.opposite();
+                        sendMsg(Protocol.createSwapMsg());
+                        continue;
+                    }
                 }
 
                 // Calculate next move using MCTS
