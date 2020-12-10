@@ -255,7 +255,7 @@ public class Main {
 //        }
     }
 
-    private static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
+    public static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
         // Side should be me, not the opponent.
         long startTime = System.currentTimeMillis();
         long endTime = startTime + timeAllowed;
@@ -310,7 +310,7 @@ public class Main {
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 1000*30;
+        long timeAllowed = 1000*10;
 
         try {
             String msg = recvMsg();
@@ -377,7 +377,6 @@ public class Main {
 
                 // Calculate next move using MCTS
                 Move next_move = MCTSNextMove(kalah.getBoard(), my_side, timeAllowed);
-                //System.err.println(next_move.getSide() + "" + next_move.getHole());
                 msg = Protocol.createMoveMsg(next_move.getHole());
 
                 // If North side, decide whether to swap by:

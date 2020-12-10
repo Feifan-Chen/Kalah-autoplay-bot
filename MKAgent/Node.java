@@ -132,39 +132,52 @@ public class Node {
 
         for (int i = 0; i < board.getNoOfHoles(); i++) {
             Board nodeBoard = new Board(board);
-            Move nodeMove = new Move(side.opposite(), i + 1);
 
-            if (Kalah.isLegalMove(nodeBoard, nodeMove))
+            Node child;
+
+            // Detect first if a greedy move can be taken.
+            boolean is1_greedy;
+            Move greedy1_move;
+
+            if (this.greedy)
             {
-                Node child;
-                // Greedy is an unusual move, so assuming opponent's decision leads to this move.
-                boolean is_greedy = isKind1GreedyChild(board, side.opposite(), nodeMove.getHole());
+                is1_greedy = isKind1GreedyChild(board, side, i+1);
+                greedy1_move = new Move(side, i+1);
+            }
+            else
+            {
+                is1_greedy = isKind1GreedyChild(board, side.opposite(), i+1);
+                greedy1_move = new Move(side.opposite(), i+1);
+            } // if
 
-                boolean is2_greedy = isKind2GreedyChild(board, side.opposite(), nodeMove.getHole());
+            // if is a greedy1 move, then make this a child with side same to parent side.
+            if (is1_greedy)
+            {
+                Kalah.makeMove(nodeBoard, greedy1_move);
 
-                if (is_greedy)
-                {
-                    Move greedyMove = new Move(side, nodeMove.getHole());
-                    Kalah.makeMove(nodeBoard, greedyMove);
-
-                    child = new Node(0,0,side,nodeMove,false,nodeBoard,this, new ArrayList<>());
-                }
-                else if (is2_greedy)
-                {
-                    Move greedy2Move = new Move(side, nodeMove.getHole());
-                    Kalah.makeMove(nodeBoard, greedy2Move);
-
-                    child = new Node(0,0,side,nodeMove,true,nodeBoard,this, new ArrayList<>());
-                }
-                else
-                {
-                    Kalah.makeMove(nodeBoard, nodeMove);
-                    child = new Node(0, 0, side.opposite(), nodeMove, false, nodeBoard, this, new ArrayList<>());
-                }
-
+                child = new Node(0,0,side,greedy1_move,false,nodeBoard,this, new ArrayList<>());
                 children.add(child);
             }
-        }
+            else
+            {
+                // Else check if this is a legal move
+                Move nodeMove = new Move(side.opposite(), i + 1);
+
+                if (Kalah.isLegalMove(nodeBoard, nodeMove))
+                {
+                    // Make a move
+                    Kalah.makeMove(nodeBoard, nodeMove);
+
+                    // First check for a greedy 2 move, if it is, then set node.greedy = true.
+                    boolean is2_greedy = isKind2GreedyChild(board, side.opposite(), nodeMove.getHole());
+                    if (is2_greedy)
+                        child = new Node(0,0,side.opposite(),nodeMove,true,nodeBoard,this, new ArrayList<>());
+                    else
+                        child = new Node(0, 0, side.opposite(), nodeMove, false, nodeBoard, this, new ArrayList<>());
+                    children.add(child);
+                } // if
+            } // if-else
+        } // for
     }
 
     public static boolean isKind1GreedyChild(Board board, Side side, int hole) {
