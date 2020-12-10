@@ -73,26 +73,17 @@ public class Main {
         return leafNode.getChildren().get(new Random().nextInt(leafNode.getChildren().size()));
     }
 
-    private static Node rolloutAndBackPropagation(Node node, long timeAllowed) {
-        Board board = node.getBoard();
-        if (Kalah.gameOver(board)) {
-            backPropagation(node, board.payoffs(mySide));
-            return node;
+    private static void rolloutAndBackPropagation(Node node, long timeAllowed) {
+        Node simulateNode = new Node(node);
+        Board board = simulateNode.getBoard();
+        Side side = simulateNode.getWhosTurnNext();
+        while(!Kalah.gameOver(board))
+        {
+            ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, side);
+            Move next_move = legalMoves.get(new Random().nextInt(legalMoves.size()));
+            side = Kalah.makeMove(board, next_move);
         }
-
-        ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, node.getWhosTurnNext());
-        Move randMove = legalMoves.get(new Random().nextInt(legalMoves.size()));
-        Board simulateBoard = new Board(board);
-        Side turn = Kalah.makeMove(simulateBoard, randMove);
-        Node simulateNode = new Node(0, 0, turn, randMove, simulateBoard, node, new ArrayList<>());
-
-        for (Node child : node.getChildren()) {
-            if (child.equals(simulateNode)) {
-                simulateNode = child;
-                break;
-            }
-        }
-        return rolloutAndBackPropagation(simulateNode, timeAllowed);
+        backPropagation(node, board.payoffs(mySide));
     }
 
     private static void backPropagation(Node node, int payoff) {
@@ -135,7 +126,7 @@ public class Main {
 
         Node bestChild = null;
 
-        while ((System.currentTimeMillis() < endTime) || bestChild == null) {
+        while (System.currentTimeMillis() < endTime || bestChild == null) {
             generation++;
 
             // Selection and Expansion.
