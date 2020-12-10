@@ -7,8 +7,7 @@ public class Node implements Comparable<Node> {
     // Describes how we get here, null for root node.
     private Move move;
 
-    // Describes whose decision leads to this node.
-    private Side side;
+    // Describes who should move next.
     private Side whosTurnNext;
 
     private Node parent;
@@ -25,12 +24,11 @@ public class Node implements Comparable<Node> {
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side side, Side whosTurnNext, Move move, Board board, Node parent, ArrayList<Node> children) {
+    public Node(int noOfVisits, int totalScore, Side whosTurnNext, Move move, Board board, Node parent, ArrayList<Node> children) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
         this.board = new Board(board);
         this.move = move;
-        this.side = side;
         this.whosTurnNext = whosTurnNext;
         this.parent = parent;
         this.children = children;
@@ -44,7 +42,6 @@ public class Node implements Comparable<Node> {
         // Should be a deep copy.
         this.children = new ArrayList<>();
         this.children.addAll(node.children);
-        this.side = node.side;
         this.whosTurnNext = node.whosTurnNext;
         this.move = node.move;
     }
@@ -77,14 +74,6 @@ public class Node implements Comparable<Node> {
     }
 
     // Setters, Getters
-    public void setSide(Side side) {
-        this.side = side;
-    }
-
-    public Side getSide() {
-        return this.side;
-    }
-
     public void setParent(Node parent) {
         this.parent = parent;
     }
@@ -185,7 +174,7 @@ public class Node implements Comparable<Node> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(move, side, whosTurnNext, parent, board, noOfVisits, totalScore, children);
+        return Objects.hash(move, whosTurnNext, parent, board, noOfVisits, totalScore, children);
     }
 
     @Override

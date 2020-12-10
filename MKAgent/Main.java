@@ -54,8 +54,8 @@ public class Main {
     private static Node selection(Node node) {
         if (node.isLeafNode()) {
             if (node.getNoOfVisits() == 0)
-                return node;
-            return expand(node);
+                return expand(node);
+            return node;
         }
         return selection(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
     }
@@ -67,7 +67,7 @@ public class Main {
             Move nodeMove = new Move(leafNode.getWhosTurnNext(), i);
             if (Kalah.isLegalMove(nodeBoard, nodeMove)) {
                 Side turn = Kalah.makeMove(nodeBoard, nodeMove);
-                Node child = new Node(0, 0, nodeMove.getSide(), turn, nodeMove, nodeBoard, leafNode, new ArrayList<>());
+                Node child = new Node(0, 0, turn, nodeMove, nodeBoard, leafNode, new ArrayList<>());
                 leafNode.addChild(child);
             }
         }
@@ -88,7 +88,7 @@ public class Main {
         Move randMove = legalMoves.get(new Random().nextInt(legalMoves.size()));
         Board simulateBoard = new Board(board);
         Side turn = Kalah.makeMove(simulateBoard, randMove);
-        Node simulateNode = new Node(0, 0, randMove.getSide(), turn, randMove, simulateBoard, node, new ArrayList<>());
+        Node simulateNode = new Node(0, 0, turn, randMove, simulateBoard, node, new ArrayList<>());
 
         for (Node child : node.getChildren()) {
             if (child.equals(simulateNode)) {
@@ -121,11 +121,11 @@ public class Main {
 
     private static Move MCTSNextMove(Board board, long timeAllowed) {
         int generation = 0;
-        final int GEN_LIMIT = 100;
+        final int GEN_LIMIT = 10000;
 
-        long endTime = System.currentTimeMillis() + timeAllowed;
+        long endTime = System.currentTimeMillis() + timeAllowed*10;
 
-        Node root = new Node(0, 0, null, mySide, null, board, null, new ArrayList<>());
+        Node root = new Node(0, 0, mySide, null, board, null, new ArrayList<>());
 
         while (System.currentTimeMillis() < endTime && generation < GEN_LIMIT) {
             generation++;
