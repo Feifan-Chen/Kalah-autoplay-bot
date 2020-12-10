@@ -1,6 +1,7 @@
 package MKAgent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
 
 public class Node {
@@ -18,32 +19,36 @@ public class Node {
 
     // is kind 2 greedy
     private boolean greedy;
+    private boolean greedy2;
 
     public Node() {
         move = null;
         this.noOfVisits = 0;
         this.totalScore = 0;
         this.greedy = false;
+        this.greedy2 = false;
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side side, Move move, boolean greedy, Board board) {
+    public Node(int noOfVisits, int totalScore, Side side, Move move, boolean greedy, boolean greedy2, Board board) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
         this.board = new Board(board);
         this.move = move;
         this.side = side;
         this.greedy = false;
+        this.greedy2 = false;
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side side, Move move,boolean greedy, Board board, Node parent, ArrayList<Node> children) {
+    public Node(int noOfVisits, int totalScore, Side side, Move move,boolean greedy, boolean greedy2, Board board, Node parent, ArrayList<Node> children) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
         this.board = new Board(board);
         this.move = move;
         this.side = side;
         this.greedy = false;
+        this.greedy2 = false;
         this.parent = parent;
         this.children = children;
     }
@@ -59,6 +64,7 @@ public class Node {
         this.side = node.side;
         this.move = node.move;
         this.greedy = node.greedy;
+        this.greedy2 = false;
     }
 
 
@@ -70,8 +76,17 @@ public class Node {
         return this.children.get((int)(Math.random() * this.children.size()));
     }
 
+//    public Node getBestChild() {
+//        return UCT.chooseBestUCTNode(this);
+//    }
+
     public Node getBestChild() {
-        return UCT.chooseBestUCTNode(this);
+        return Collections.max(this.children, (first, second) -> {
+            int vit1 = first.totalScore;
+            int vit2 = second.totalScore;
+            return Double.compare(vit1, vit2);
+        });
+        //return UCT.chooseBestUCTNode(this);
     }
 
     // Setters, Getters
@@ -132,34 +147,42 @@ public class Node {
 
         for (int i = 0; i < board.getNoOfHoles(); i++) {
             Board nodeBoard = new Board(board);
-            Move nodeMove = new Move(side.opposite(), i + 1);
+            Side moveSide;
+            if(this.greedy)
+                moveSide = this.side;
+            else
+                moveSide = this.side.opposite();
+
+            Move nodeMove = new Move(moveSide, i + 1);
 
             if (Kalah.isLegalMove(nodeBoard, nodeMove))
             {
                 Node child;
                 // Greedy is an unusual move, so assuming opponent's decision leads to this move.
-                boolean is_greedy = isKind1GreedyChild(board, side.opposite(), nodeMove.getHole());
+                boolean is_greedy = isKind1GreedyChild(board, moveSide, nodeMove.getHole());
+                //System.err.println("hole: " + (i+1)  + "greedy1: " + is_greedy);
 
-                boolean is2_greedy = isKind2GreedyChild(board, side.opposite(), nodeMove.getHole());
+                boolean is2_greedy = isKind2GreedyChild(board, moveSide, nodeMove.getHole());
 
                 if (is_greedy)
                 {
-                    Move greedyMove = new Move(side, nodeMove.getHole());
-                    Kalah.makeMove(nodeBoard, greedyMove);
+                    //Move greedyMove = new Move(moveSide, nodeMove.getHole());
+                    Kalah.makeMove(nodeBoard, nodeMove);
 
-                    child = new Node(0,0,side,nodeMove,false,nodeBoard,this, new ArrayList<>());
+                    child = new Node(0,0,moveSide,nodeMove,true,false,nodeBoard,this, new ArrayList<>());
                 }
                 else if (is2_greedy)
                 {
-                    Move greedy2Move = new Move(side, nodeMove.getHole());
-                    Kalah.makeMove(nodeBoard, greedy2Move);
+                    //System.err.println("is a greedy child");
+                    //Move greedy2Move = new Move(side, nodeMove.getHole());
+                    Kalah.makeMove(nodeBoard, nodeMove);
 
-                    child = new Node(0,0,side,nodeMove,true,nodeBoard,this, new ArrayList<>());
+                    child = new Node(0,0, moveSide,nodeMove,false,true,nodeBoard,this, new ArrayList<>());
                 }
                 else
                 {
                     Kalah.makeMove(nodeBoard, nodeMove);
-                    child = new Node(0, 0, side.opposite(), nodeMove, false, nodeBoard, this, new ArrayList<>());
+                    child = new Node(0, 0, moveSide, nodeMove,false, false, nodeBoard, this, new ArrayList<>());
                 }
 
                 children.add(child);
@@ -186,11 +209,26 @@ public class Node {
 
     public static boolean isKind2GreedyChild(Board board, Side side, int hole) {
         int noOfSeeds = board.getSeeds(side, hole);
-        int endHole = noOfSeeds % 15 + hole;
-        if (endHole > 7)
+        Board currentBoard = new Board(board);
+        //int round = noOfSeeds / 15;
+        //System.err.println(round);
+        int endHole = (noOfSeeds % 15 + hole) % 15;
+        //System.err.println(endHole);
+        if (endHole > 7 || endHole == 0){
+            //System.err.println("here");
             // 注意 当endHole为8时，是Kind1GreedyChild
-            return false;
-        return board.getSeeds(side, endHole) == 0 && board.getSeedsOp(side, endHole) > 0;
+            return false;}
+        Move nodeMove = new Move(side,hole);
+        Kalah.makeMove(currentBoard,nodeMove);
+        //System.err.println(currentBoard.toString());
+        //System.err.println(currentBoard.getSeedsInStore(side) - board.getSeedsInStore(side) - round > 1);
+        //return currentBoard.getSeedsInStore(side) - board.getSeedsInStore(side) - round > 1;
+        //System.err.println(currentBoard.getSeeds(side, endHole));
+//        if(board.getSeeds(side,endHole) == 0 && currentBoard.getSeeds(side,endHole) == 0)
+//            if(board.getSeedsOp(side, endHole) > 0 && currentBoard.getSeedsOp(side, endHole) ==0)
+//                return true;
+//        return false;
+        return (board.getSeeds(side, endHole) == 0);
     }
 
 
@@ -219,6 +257,12 @@ public class Node {
         this.greedy = greedy;
     }
 
+    public boolean getGreedy2(){
+        return this.greedy2;
+    }
+    public void setGreedy2(boolean greedy2){
+        this.greedy2 = greedy2;
+    }
 
 
     @Override

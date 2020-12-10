@@ -223,15 +223,26 @@ public class Main {
 
     private static void backPropagation(Node node, int payoff, Node root) {
         //while it is not back to the root, update payoff value and increase
+        //
+        // System.err.println("payoff :" + payoff);
         Node currentNode = node;
-        int double_payoff = payoff*payoff;
+        //System.err.println(node);
+        int score = payoff;
+        if(node.getGreedy()){
+            //System.err.println("greedy");
+            score = score + payoff;
+        }
+        else if(node.getGreedy2()){
+            //System.err.println(score);
+            score = payoff*payoff;
+        }
+        //int double_payoff = payoff*payoff;
         do {
             //System.err.println("before backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
             currentNode.incrementOneVisit();
             //System.err.println("backup " + currentNode + "visit : " + currentNode.getNoOfVisits());
             if(currentNode.getSide() == node.getSide() ){
-                if(currentNode.getGreedy())
-                    currentNode.incrementScore(double_payoff);
+                currentNode.incrementScore(score);
             }
             currentNode = currentNode.getParent();
             //System.err.println(currentNode.getTotalScore());
@@ -252,10 +263,10 @@ public class Main {
 //              currentNode.incrementScore(payoff * weight);
 //          }
 //          currentNode = currentNode.getParent();
-//        }
+//        }currentBoard
     }
 
-    private static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
+    public static Move MCTSNextMove(Board board, Side side, long timeAllowed) {
         // Side should be me, not the opponent.
         long startTime = System.currentTimeMillis();
         long endTime = startTime + timeAllowed;
@@ -271,16 +282,18 @@ public class Main {
             // Selection.
             //System.err.println("root " + root + " visit " + root.getNoOfVisits());
             Node selectedNode = selection(root);
-            if (Kalah.gameOver(selectedNode.getBoard()))
+            if (Kalah.gameOver(selectedNode.getBoard())){
+                //System.err.println("end of game");
                 break;
+            }
          //   System.err.println("selection board" + selectedNode.getBoard());
-          //  System.err.println("selection " + selectedNode + "visit " + selectedNode.getNoOfVisits());
+            //System.err.println("selection " + selectedNode + "visit " + selectedNode.getNoOfVisits());
            // System.err.println("num of visit" + selectedNode.getNoOfVisits() + "total score: " + selectedNode.getTotalScore());
           //  System.err.println("Node" + selectedNode);
            // System.err.println("sum of visit" + selectedNode.getNoOfVisits());
             // Expansion.
             Node nodeToExplore = expand(selectedNode);
-         //  System.err.println("nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
+            //System.err.println("nodeToExplore " + nodeToExplore + "visit " + nodeToExplore.getNoOfVisits());
 
             // Simulation.
             int payoff = 0;
@@ -310,7 +323,7 @@ public class Main {
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 1000*30;
+        long timeAllowed = 10000;
 
         try {
             String msg = recvMsg();
