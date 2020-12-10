@@ -36,8 +36,8 @@ public class Node {
         this.board = new Board(board);
         this.move = move;
         this.side = side;
-        this.greedy = false;
-        this.greedy2 = false;
+        this.greedy = greedy;
+        this.greedy2 = greedy2;
         this.children = new ArrayList<>();
     }
 
@@ -47,8 +47,8 @@ public class Node {
         this.board = new Board(board);
         this.move = move;
         this.side = side;
-        this.greedy = false;
-        this.greedy2 = false;
+        this.greedy = greedy;
+        this.greedy2 = greedy2;
         this.parent = parent;
         this.children = children;
     }
@@ -64,7 +64,7 @@ public class Node {
         this.side = node.side;
         this.move = node.move;
         this.greedy = node.greedy;
-        this.greedy2 = false;
+        this.greedy2 = node.greedy2;
     }
 
 
