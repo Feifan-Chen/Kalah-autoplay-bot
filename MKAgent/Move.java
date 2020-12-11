@@ -8,12 +8,12 @@ public class Move
 	/**
 	 * The side of the board the player making the move is playing on.
 	 */
-	private final Side side;
+	private Side side;
 	/**
 	 * The hole from which seeds are picked at the beginning of the move and
 	 * distributed. It has to be >= 1.
 	 */
-	private final int hole;
+	private int hole;
 
 
 	/**
@@ -39,6 +39,11 @@ public class Move
 		return side;
     }
 
+	public void setSide(Side side)
+	{
+		this.side = side;
+	}
+
     /**
      * @return The hole from which seeds are picked at the beginning of the
      *         move and distributed. It will be >= 1.
@@ -47,4 +52,9 @@ public class Move
     {
 		return hole;
     }
+
+	public void setHole(int hole)
+	{
+		this.hole = hole;
+	}
 }
