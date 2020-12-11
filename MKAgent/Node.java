@@ -135,7 +135,11 @@ public class Node {
                 Node child = new Node(0, 0, side.opposite(), nodeMove, nodeBoard, this, new ArrayList<>());
                 //System.err.println("children board " + child.getBoard());
                 if (is_greedy)
+                {
+                    child.setSide(side);
                     children.add(child);
+                }
+
 
                 not_greedy_children.add(child);
             }
