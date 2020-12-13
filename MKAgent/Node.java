@@ -1,7 +1,11 @@
 package MKAgent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
+import java.util.Random;
+
+import static MKAgent.Main.mySide;
 
 public class Node implements Comparable<Node> {
     // Describes how we get here, null for root node.
@@ -118,15 +122,15 @@ public class Node implements Comparable<Node> {
         return this.children;
     }
 
-    public ArrayList<Node> checkAvailableChildren(){
-        ArrayList<Node> children = getChildren();
-        ArrayList<Node> available = new ArrayList<>();
-        for(Node child : children) {
-            if (child.getNoOfVisits() == 0)
-                available.add(child);
-        }
-        return available;
-    }
+//    public ArrayList<Node> checkAvailableChildren(){
+//        ArrayList<Node> children = getChildren();
+//        ArrayList<Node> available = new ArrayList<>();
+//        for(Node child : children) {
+//            if (child.getNoOfVisits() == 0)
+//                available.add(child);
+//        }
+//        return available;
+//    }
 
     public void setMove(Move move) {
         this.move = move;
@@ -159,7 +163,10 @@ public class Node implements Comparable<Node> {
             n is current node's number of visits
          */
         double visits = noOfVisits;
-        return (totalScore / visits + 2 * Math.sqrt(Math.log(getRootVisit(this)) / visits));
+        if(this.move.getSide() == mySide)
+            return ( totalScore/visits + 1 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
+        else
+            return ( (1- totalScore/visits) + 1 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
     }
 
     @Override
@@ -180,5 +187,31 @@ public class Node implements Comparable<Node> {
     @Override
     public int compareTo(Node o) {
         return this.getUCTValue().compareTo(o.getUCTValue());
+    }
+
+    public boolean childrenAllVisited() {
+        for(Node child : this.children){
+            if(child.getNoOfVisits() == 0)
+                return false;
+        }
+        return true;
+    }
+
+    public Node getRandomAvaliableChild() {
+        int noOfChildren = this.children.size();
+        for(Node child : this.children){
+            if(child.getNoOfVisits() == 0)
+                return child;
+        }
+        return this;
+    }
+
+    public Node getBestChild(){
+        return Collections.max(this.children, (first, second) -> {
+            int vit1 = first.noOfVisits;
+            int vit2 = second.noOfVisits;
+            return Double.compare(vit1, vit2);
+        });
+
     }
 }

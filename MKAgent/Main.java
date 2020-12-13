@@ -14,8 +14,9 @@ public class Main {
      * Input from the game engine.
      */
     private static final Reader input = new BufferedReader(new InputStreamReader(System.in));
+    public static Side mySide;
 
-    private static Side mySide;
+    //private static Side mySide;
     private static Side oppSide;
 
     /**
@@ -48,12 +49,23 @@ public class Main {
     }
 
     private static Node selectionAndExpansion(Node node) {
-        if (node.isLeafNode()) {
-            if (node.getNoOfVisits() == 0)
-                return expansion(node);
-            return node;
+        //if node has children which is all visited, check next level.
+        if(!node.isLeafNode()){
+            if(node.childrenAllVisited())
+                return selectionAndExpansion(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
+            else
+                return node.getRandomAvaliableChild();
         }
-        return selectionAndExpansion(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
+
+        //if node is has no children, expand it
+        return expansion(node);
+
+//        if (node.isLeafNode()) {
+//            if (node.getNoOfVisits() == 0)
+//                return expansion(node);
+//            return node;
+//        }
+//        return selectionAndExpansion(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
     }
 
     private static Node expansion(Node leafNode) {
@@ -68,8 +80,9 @@ public class Main {
             }
         }
 
-        if (leafNode.getChildren().size() == 0)
+        if (leafNode.getChildren().size() == 0) {
             return leafNode;
+        }
         return leafNode.getChildren().get(new Random().nextInt(leafNode.getChildren().size()));
     }
 
@@ -83,7 +96,12 @@ public class Main {
             Move next_move = legalMoves.get(new Random().nextInt(legalMoves.size()));
             side = Kalah.makeMove(board, next_move);
         }
-        backPropagation(node, board.payoffs(mySide));
+        int result;
+        if(board.payoffs(mySide) > 0)
+            result = 1;
+        else
+            result = 0;
+        backPropagation(node, result);
     }
 
     private static void backPropagation(Node node, int payoff) {
@@ -142,6 +160,10 @@ public class Main {
         }
 
         // We need the move that leads to the best result.
+//        for(Node child : root.getChildren()){
+//            System.err.println(child.getNoOfVisits());
+//        }
+        //return root.getBestChild().getMove();
         return bestChild.getMove();
     }
 
@@ -156,7 +178,7 @@ public class Main {
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 200;
+        long timeAllowed = 2000;
 
         try {
             String msg = recvMsg();
