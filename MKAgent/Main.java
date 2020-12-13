@@ -18,6 +18,8 @@ public class Main {
      */
     private static final Reader input = new BufferedReader(new InputStreamReader(System.in));
 
+    public static Side mySide;
+
     /**
      * Sends a message to the game engine.
      * @param msg The message.
@@ -47,7 +49,7 @@ public class Main {
         return message.toString();
     }
 
-    private static final int MAX_DEPTH = 5;
+    private static final int MAX_DEPTH = 6;
 
     private static Node selection(Node node) {
         Node ret = node;
@@ -387,7 +389,6 @@ public class Main {
      * @param args Command line arguments.
      */
     public static void main(String[] args) {
-        Side my_side = null;
         boolean may_swap = false;
 
         // Record the board locally.
@@ -410,12 +411,12 @@ public class Main {
                     System.err.println("Starting player? " + south);
                     if(south)
                     {
-                        my_side = Side.SOUTH;
+                        mySide = Side.SOUTH;
                         sendMsg(Protocol.createMoveMsg(1));
                     }
                     else
                     {
-                        my_side = Side.NORTH;
+                        mySide = Side.NORTH;
                         may_swap = true;
                     }
                     break;
@@ -440,7 +441,7 @@ public class Main {
                 Protocol.MoveTurn r = Protocol.interpretStateMsg (msg, kalah.getBoard());
 
                 if (r.move == -1) {
-                    my_side = my_side.opposite();
+                    mySide = mySide.opposite();
                 }
 
                 if (!r.again || r.end) {
@@ -453,7 +454,7 @@ public class Main {
                  */
                 // Calculate next move using minimax.
                 // Double.Min_Value is 0.
-                Move next_move = (Move)(minimax(my_side, kalah.getBoard(), -1 * Double.MAX_VALUE, Double.MAX_VALUE,
+                Move next_move = (Move)(minimax(mySide, kalah.getBoard(), -1 * Double.MAX_VALUE, Double.MAX_VALUE,
                                   0, true)[0]);
                 msg = Protocol.createMoveMsg(next_move.getHole());
 
@@ -466,12 +467,12 @@ public class Main {
                     Kalah.makeMove(move_board, next_move);
 
 
-                    int original_payoff = kalah.getBoard().payoffs(my_side);
-                    int after_swap_payoff = move_board.payoffs(my_side.opposite());
+                    int original_payoff = kalah.getBoard().payoffs(mySide);
+                    int after_swap_payoff = move_board.payoffs(mySide.opposite());
 
                     if (after_swap_payoff >= original_payoff)
                     {
-                        my_side = my_side.opposite();
+                        mySide = mySide.opposite();
                         msg = Protocol.createSwapMsg();
                     }
                 }

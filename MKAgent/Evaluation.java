@@ -6,7 +6,7 @@ import java.util.Collections;
 public class Evaluation {
     public static int getValue(Board board, Side playerSide) {
         int value = getSeedDiff(board, playerSide) + maxMoveScore(board, playerSide);
-        return value;
+        return Main.mySide == playerSide ? value : -value;
     }
 
     private static int getSeedDiff(Board board, Side playerSide) {
