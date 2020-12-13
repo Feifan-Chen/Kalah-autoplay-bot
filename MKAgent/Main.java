@@ -312,7 +312,7 @@ public class Main {
     }
 
     public static double heuristic(Board board, Side side) {
-        return board.getSeedsInStore(side);
+        return Evaluation.getValue(board, side);
     }
 
     public static Object[] minimax(Side side, Board board, double alpha, double beta, int depth, boolean maxPlayer) {
