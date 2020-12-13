@@ -47,7 +47,7 @@ public class Main {
         return message.toString();
     }
 
-
+    private static final int MAX_DEPTH = 5;
 
     private static Node selection(Node node) {
         Node ret = node;
@@ -311,19 +311,89 @@ public class Main {
         return root.getBestChild().getMove();
     }
 
+    public static double heuristic(Board board, Side side) {
+        return board.getSeedsInStore(side);
+    }
+
+    public static Object[] minimax(Side side, Board board, double alpha, double beta, int depth, boolean maxPlayer) {
+        // Return value should be Object[Move, Double].
+        if (depth == MAX_DEPTH || Kalah.gameOver(board)) {
+            return new Object[] {null, heuristic(board, side)};
+        }
+        // System.err.println("Depth: " + depth);
+        double bestValue;
+        double value;
+        Move bestMove = null;
+
+        if (maxPlayer) {
+            bestValue = -1 * Double.MAX_VALUE;
+            ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, side);
+            // System.err.println("NoOfLegalMoves: " + legalMoves.size());
+            for (Move move : legalMoves) {
+                Board copiedBoard = new Board(board);
+                Side nextPlayer = Kalah.makeMove(copiedBoard, move);
+                if (nextPlayer == side) {
+                    // An extra move, do not deepen the tree.
+                    value = (double) minimax(side, copiedBoard, alpha, beta, depth, true)[1];
+                }
+                else {
+                    value = (double) minimax(side.opposite(), copiedBoard, alpha, beta, depth + 1, false)[1];
+                }
+
+                if (value > bestValue) {
+                    bestValue = value;
+                    bestMove = move;
+                }
+
+                alpha = Math.max(alpha, bestValue);
+
+                // Pruning.
+                if (beta <= alpha)
+                    break;
+            }
+        }
+        else {
+            bestValue = Double.MAX_VALUE;
+            ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, side.opposite());
+            // System.err.println("NoOfLegalMoves: " + legalMoves.size());
+            for (Move move : legalMoves) {
+                Board copiedBoard = new Board(board);
+                Side nextPlayer = Kalah.makeMove(copiedBoard, move);
+                if (nextPlayer == side.opposite()) {
+                    // An extra move, do not deepen the tree.
+                    value = (double) minimax(side.opposite(), copiedBoard, alpha, beta, depth, false)[1];
+                }
+                else {
+                    value = (double) minimax(side, copiedBoard, alpha, beta, depth + 1, true)[1];
+                }
+
+                if (value < bestValue) {
+                    bestValue = value;
+                    bestMove = move;
+                }
+
+                beta = Math.min(beta, bestValue);
+
+                // Pruning.
+                if (beta <= alpha)
+                    break;
+            }
+        }
+        return new Object[] {bestMove, bestValue};
+    }
+
     /**
      * The main method, invoked when the program is started.
      * @param args Command line arguments.
      */
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         Side my_side = null;
         boolean may_swap = false;
 
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 10000;
+        // long timeAllowed = 10000;
 
         try {
             String msg = recvMsg();
@@ -358,10 +428,7 @@ public class Main {
             // Continues the game
             while (true)
             {
-                //System.err.println();
                 msg = recvMsg();
-                //System.err.print("Received: " + msg);
-
                 msg_type = Protocol.getMessageType(msg);
 
                 if (msg_type == MsgType.END)
@@ -376,21 +443,18 @@ public class Main {
                     my_side = my_side.opposite();
                 }
 
-                //System.err.println("again:" + r.again);
-                //System.err.println("endgame:" + r.end);
-//                if(!r.again){
-//                        continue;
-//                }
                 if (!r.again || r.end) {
-//                    System.err.println("again:" + r.again);
-//                    System.err.println("endgame:" + r.end);
-                    //System.err.println("condition happened");
                     continue;
                 }
 
-                // Calculate next move using MCTS
-                Move next_move = MCTSNextMove(kalah.getBoard(), my_side, timeAllowed);
-                //System.err.println(next_move.getSide() + "" + next_move.getHole());
+                /*
+                  只有当not (!r.again || r.end)时，以下代码才会执行。
+                  等同于 只有当(r.again && !r.end)时，以下代码才会执行，命题逻辑化简。
+                 */
+                // Calculate next move using minimax.
+                // Double.Min_Value is 0.
+                Move next_move = (Move)(minimax(my_side, kalah.getBoard(), -1 * Double.MAX_VALUE, Double.MAX_VALUE,
+                                  0, true)[0]);
                 msg = Protocol.createMoveMsg(next_move.getHole());
 
                 // If North side, decide whether to swap by:
@@ -403,24 +467,18 @@ public class Main {
 
 
                     int original_payoff = kalah.getBoard().payoffs(my_side);
-                    //System.err.println("op: " + kalah.getBoard() + "payoff : " + original_payoff);
                     int after_swap_payoff = move_board.payoffs(my_side.opposite());
-                    //System.err.println("swap" + move_board + "pay off + " + after_swap_payoff);
 
-                    //System.err.println();
-                    //System.err.println("1" + msg);
                     if (after_swap_payoff >= original_payoff)
                     {
                         my_side = my_side.opposite();
                         msg = Protocol.createSwapMsg();
-                        //System.err.println("2" + msg);
                     }
                 }
                 may_swap = false;
 
                 // send message to game engine.
                 sendMsg(msg);
-                //System.err.println(msg);
             }
         }
         catch (InvalidMessageException e) {
