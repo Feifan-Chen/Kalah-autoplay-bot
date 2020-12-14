@@ -51,8 +51,12 @@ public class Main {
     private static Node selectionAndExpansion(Node node) {
         //if node has children which is all visited, check next level.
         if(!node.isLeafNode()){
-            if(node.childrenAllVisited())
+            if(node.childrenAllVisited()) {
+                for (Node child : node.getChildren()) {
+                    System.err.println(child.getNoOfVisits());
+                }
                 return selectionAndExpansion(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
+            }
             else
                 return node.getRandomAvaliableChild();
         }
@@ -97,14 +101,20 @@ public class Main {
             side = Kalah.makeMove(board, next_move);
         }
         int result;
-        if(board.payoffs(mySide) > 0)
-            result = 1;
+        double score;
+        result = board.payoffs(mySide);
+        if(result > 0){
+            if (result > 30){
+                score = 1;
+            }
+            score = 0.5;
+        }
         else
-            result = 0;
-        backPropagation(node, result);
+            score = 0;
+        backPropagation(node, score);
     }
 
-    private static void backPropagation(Node node, int payoff) {
+    private static void backPropagation(Node node, double payoff) {
         node.setNoOfVisits(node.getNoOfVisits() + 1);
         node.setTotalScore(node.getTotalScore() + payoff);
         Node parent = node.getParent();
@@ -159,10 +169,10 @@ public class Main {
                 bestChild = getMaxRobustChild(root);
         }
 
-        // We need the move that leads to the best result.
-//        for(Node child : root.getChildren()){
-//            System.err.println(child.getNoOfVisits());
-//        }
+         //We need the move that leads to the best result.
+        for(Node child : root.getChildren()){
+            System.err.println(child.getNoOfVisits());
+        }
         //return root.getBestChild().getMove();
         return bestChild.getMove();
     }
@@ -178,7 +188,7 @@ public class Main {
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 2000;
+        long timeAllowed = 1000;
 
         try {
             String msg = recvMsg();

@@ -17,7 +17,7 @@ public class Node implements Comparable<Node> {
     private Node parent;
     private Board board;
     private int noOfVisits;
-    private int totalScore;
+    private double totalScore;
     private ArrayList<Node> children;
 
     public Node() {
@@ -96,15 +96,15 @@ public class Node implements Comparable<Node> {
 
     public void incrementOneVisit() {this.noOfVisits += 1; }
 
-    public void setTotalScore(int totalScore) {
+    public void setTotalScore(double totalScore) {
         this.totalScore = totalScore;
     }
 
-    public int getTotalScore() {
+    public double getTotalScore() {
         return this.totalScore;
     }
 
-    public void incrementScore(int payoff) {this.totalScore += payoff; }
+    public void incrementScore(double payoff) {this.totalScore += payoff; }
 
     public void setBoard(Board board) {
         this.board = board;
@@ -164,9 +164,9 @@ public class Node implements Comparable<Node> {
          */
         double visits = noOfVisits;
         if(this.move.getSide() == mySide)
-            return ( totalScore/visits + 1 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
+            return ( totalScore/visits + 2 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
         else
-            return ( (1- totalScore/visits) + 1 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
+            return ( (1- totalScore/visits) + 2 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
     }
 
     @Override
