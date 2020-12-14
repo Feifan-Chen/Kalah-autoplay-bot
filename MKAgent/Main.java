@@ -1,7 +1,9 @@
 package MKAgent;
 import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Random;
 
 /**
  * The main application class. It also provides methods for communication
@@ -13,6 +15,7 @@ public class Main {
      */
     private static final Reader input = new BufferedReader(new InputStreamReader(System.in));
     public static Side mySide;
+
     //private static Side mySide;
     private static Side oppSide;
     private static final int MAX_DEPTH = 3;
@@ -50,6 +53,9 @@ public class Main {
         //if node has children which is all visited, check next level.
         if(!node.isLeafNode()){
             if(node.childrenAllVisited()) {
+//                for (Node child : node.getChildren()) {
+//                    System.err.println(child.getNoOfVisits());
+//                }
                 return selectionAndExpansion(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
             }
             else
@@ -89,24 +95,39 @@ public class Main {
         Node simulateNode = new Node(node);
         Board board = simulateNode.getBoard();
         Side side = simulateNode.getWhosTurnNext();
+        double score = 0.0;
+        boolean doSimulation = true;
 
-        while(!Kalah.gameOver(board))
-        {
-            ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, side);
-            Move next_move = legalMoves.get(new Random().nextInt(legalMoves.size()));
-            side = Kalah.makeMove(board, next_move);
+        //判断有没有必要提前结束棋局
+        if(board.getSeedsInStore(mySide) > 49) {
+            score = 1.0;
+            doSimulation = false;
         }
-        int result;
-        double score;
-        result = board.payoffs(mySide);
-        if(result > 0){
-            if (result > 30){
-                score = 1;
+        else if (board.getSeedsInStore(mySide.opposite()) > 49) {
+            score = 0.0;
+            doSimulation = false;
+        }
+
+        if(doSimulation) {
+            while (!Kalah.gameOver(board)) {
+                ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, side);
+                Move next_move = legalMoves.get(new Random().nextInt(legalMoves.size()));
+                side = Kalah.makeMove(board, next_move);
             }
-            score = 0.5;
+
+            int result = board.payoffs(mySide);
+            if (result > 0) {
+                if (result > 15) {
+                    score = 1.0;
+                }
+                score = 0.5;
+            } else
+                score = 0;
+//            if(board.payoffs(mySide) > 0)
+//                score = 1;
+//            else
+//                score = 0;
         }
-        else
-            score = 0;
 
         backPropagation(node, score);
     }
@@ -147,6 +168,7 @@ public class Main {
         final int GEN_LIMIT = Integer.MAX_VALUE;
 
         long endTime = System.currentTimeMillis() + timeAllowed;
+        long forceEndTime = System.currentTimeMillis() + 2 * timeAllowed;
 
 
         Node root = new Node(0, 0, side, null, board, null, new ArrayList<>());
@@ -166,19 +188,20 @@ public class Main {
             // Rollout and BackPropagation.
             rolloutAndBackPropagation(nodeToExplore, timeAllowed);
 
-            if (!inLimit)
-            {
-                bestChild = getMaxRobustChild(root);
-                if (bestChild == null)
-                {
-                    double highest = Double.MIN_VALUE;
-                    for(Node child : root.getChildren()){
-                        if (highest < child.getTotalScore())
-                            highest = child.getTotalScore();
-                    }
-                    return highest;
-                }
+            if (!inLimit){
+                bestChild = getMaxRobustChild(root);}
+
+            if(System.currentTimeMillis()> forceEndTime){
+//                for(Node child : root.getChildren()){
+//                    System.err.println(child.getNoOfVisits());
+//                }
+                return root.getBestChild().getMove().getHole();
             }
+        }
+
+         //We need the move that leads to the best result.
+        for(Node child : root.getChildren()){
+            System.err.println(child.getNoOfVisits());
         }
 
 //        for (Node child : root.getChildren())
@@ -186,7 +209,7 @@ public class Main {
 
 
         //return root.getBestChild().getMove();
-        return bestChild.getTotalScore();
+        return bestChild.getMove().getHole();
     }
 
     public static double heuristic(Board board, Side side) {

@@ -191,9 +191,9 @@ public class Node implements Comparable<Node> {
          */
         double visits = noOfVisits;
         if(this.move.getSide() == mySide)
-            return ( totalScore/visits + 2 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
+            return ( totalScore/visits + 2 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits) + getHeuristic(this));
         else
-            return ( (1- totalScore/visits) + 2 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
+            return ( (1- totalScore/visits) + 2 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits) + getHeuristic(this));
     }
 
     @Override
@@ -240,5 +240,14 @@ public class Node implements Comparable<Node> {
             return Double.compare(vit1, vit2);
         });
 
+    }
+
+    public static double getHeuristic(Node node){
+        double res = 0.0;
+        if (Evaluation.canNextMove(node))
+            res += 1;
+        if(Evaluation.canCaptureScore(node))
+            res += 2;
+        return res;
     }
 }
