@@ -243,5 +243,10 @@ public class Kalah {
         }
         return legalMoves;
     }
+
+    public static boolean hasWon(Board board, Side side) {
+        return holesEmpty(board, side.opposite());
+    }
+
 }
 

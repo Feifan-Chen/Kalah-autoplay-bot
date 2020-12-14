@@ -28,7 +28,7 @@ public class Node implements Comparable<Node> {
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side whosTurnNext, Move move, Board board, Node parent, ArrayList<Node> children) {
+    public Node(int noOfVisits, double totalScore, Side whosTurnNext, Move move, Board board, Node parent, ArrayList<Node> children) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
         this.board = new Board(board);
@@ -121,6 +121,33 @@ public class Node implements Comparable<Node> {
     public ArrayList<Node> getChildren() {
         return this.children;
     }
+
+
+    public static boolean isKind2GreedyChild(Board board, Side side, int hole) {
+        int noOfSeeds = board.getSeeds(side, hole);
+        Board currentBoard = new Board(board);
+        //int round = noOfSeeds / 15;
+        //System.err.println(round);
+        int endHole = (noOfSeeds % 15 + hole) % 15;
+        //System.err.println(endHole);
+        if (endHole > 7 || endHole == 0){
+            //System.err.println("here");
+            // 注意 当endHole为8时，是Kind1GreedyChild
+            return false;}
+        Move nodeMove = new Move(side,hole);
+        Kalah.makeMove(currentBoard,nodeMove);
+        //System.err.println(currentBoard.toString());
+        //System.err.println(currentBoard.getSeedsInStore(side) - board.getSeedsInStore(side) - round > 1);
+        //return currentBoard.getSeedsInStore(side) - board.getSeedsInStore(side) - round > 1;
+        //System.err.println(currentBoard.getSeeds(side, endHole));
+//        if(board.getSeeds(side,endHole) == 0 && currentBoard.getSeeds(side,endHole) == 0)
+//            if(board.getSeedsOp(side, endHole) > 0 && currentBoard.getSeedsOp(side, endHole) ==0)
+//                return true;
+//        return false;
+        return (board.getSeeds(side, endHole) == 0);
+    }
+
+
 
 //    public ArrayList<Node> checkAvailableChildren(){
 //        ArrayList<Node> children = getChildren();
