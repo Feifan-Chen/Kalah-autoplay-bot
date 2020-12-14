@@ -181,8 +181,8 @@ public class Main {
             }
         }
 
-        for (Node child : root.getChildren())
-            System.err.println("visit : " + child.getNoOfVisits() + "genearation " + generation);
+//        for (Node child : root.getChildren())
+//            System.err.println("visit : " + child.getNoOfVisits() + "genearation " + generation);
 
 
         //return root.getBestChild().getMove();
@@ -197,7 +197,7 @@ public class Main {
     private static  Object[] minimax_pruning(Node node, double alpha, double beta, int depth)
     {
 
-        double payoff = 0;
+        double payoff;
 
         if (Kalah.gameOver(node.getBoard()))
         {
@@ -211,7 +211,7 @@ public class Main {
 
         if (depth == 0)
         {
-            return new Object[] {null, MCTSNextMove(node.getBoard(), 30, node.getWhosTurnNext())};
+            return new Object[] {null, MCTSNextMove(node.getBoard(), 8, node.getWhosTurnNext())};
         }
 
         // Max node
@@ -222,7 +222,7 @@ public class Main {
             double bestValue = Double.MIN_VALUE;
             expansion(node);
             ArrayList<Node> children = node.getChildren();
-            System.err.println("max size: " + children.size());
+
             for(Node child :children)
             {
                 payoff = (double)minimax_pruning(child, alpha, beta, depth - 1)[1];
@@ -249,7 +249,6 @@ public class Main {
 
             expansion(node);
             ArrayList<Node> children = node.getChildren();
-            System.err.println("min size: " + children.size());
 
             for(Node child :children)
             {
@@ -259,14 +258,14 @@ public class Main {
 
                 if (bestValue >= beta)
                 {
-                    bestMove =child.getMove().getHole();
+                    bestMove = child.getMove().getHole();
                     bestValue = beta;
                 }
 
                 if(beta <= alpha)
                     break;
             }
-            return new Object[]{node.getMove().getHole(), beta};
+            return new Object[]{bestMove, beta};
 
         }
     }
@@ -482,7 +481,7 @@ public class Main {
                 Node node = new Node();
                 node.setBoard(new Board(kalah.getBoard()));
                 node.setWhosTurnNext(mySide);
-                int next_move = (int)(minimax_pruning(node, Double.MIN_VALUE, Double.MAX_VALUE, 3)[0]);
+                int next_move = (int)(minimax_pruning(node, Double.MIN_VALUE, Double.MAX_VALUE, 5)[0]);
                 System.err.println(System.currentTimeMillis() - start);
 
                 msg = Protocol.createMoveMsg(next_move);
