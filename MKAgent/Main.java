@@ -52,9 +52,9 @@ public class Main {
         //if node has children which is all visited, check next level.
         if(!node.isLeafNode()){
             if(node.childrenAllVisited()) {
-                for (Node child : node.getChildren()) {
-                    System.err.println(child.getNoOfVisits());
-                }
+//                for (Node child : node.getChildren()) {
+//                    System.err.println(child.getNoOfVisits());
+//                }
                 return selectionAndExpansion(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
             }
             else
@@ -94,23 +94,40 @@ public class Main {
         Node simulateNode = new Node(node);
         Board board = simulateNode.getBoard();
         Side side = simulateNode.getWhosTurnNext();
-        while(!Kalah.gameOver(board))
-        {
-            ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, side);
-            Move next_move = legalMoves.get(new Random().nextInt(legalMoves.size()));
-            side = Kalah.makeMove(board, next_move);
+        double score = 0.0;
+        boolean doSimulation = true;
+
+        //判断有没有必要提前结束棋局
+        if(board.getSeedsInStore(mySide) > 49) {
+            score = 1.0;
+            doSimulation = false;
         }
-        int result;
-        double score;
-        result = board.payoffs(mySide);
-        if(result > 0){
-            if (result > 30){
-                score = 1;
+        else if (board.getSeedsInStore(mySide.opposite()) > 49) {
+            score = 0.0;
+            doSimulation = false;
+        }
+
+        if(doSimulation) {
+            while (!Kalah.gameOver(board)) {
+                ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, side);
+                Move next_move = legalMoves.get(new Random().nextInt(legalMoves.size()));
+                side = Kalah.makeMove(board, next_move);
             }
-            score = 0.5;
+
+            int result = board.payoffs(mySide);
+            if (result > 0) {
+                if (result > 15) {
+                    score = 1.0;
+                }
+                score = 0.5;
+            } else
+                score = 0;
+//            if(board.payoffs(mySide) > 0)
+//                score = 1;
+//            else
+//                score = 0;
         }
-        else
-            score = 0;
+
         backPropagation(node, score);
     }
 
@@ -149,6 +166,7 @@ public class Main {
         final int GEN_LIMIT = Integer.MAX_VALUE;
 
         long endTime = System.currentTimeMillis() + timeAllowed;
+        long forceEndTime = System.currentTimeMillis() + 2 * timeAllowed;
 
         Node root = new Node(0, 0, mySide, null, board, null, new ArrayList<>());
 
@@ -165,8 +183,15 @@ public class Main {
             // Rollout and BackPropagation.
             rolloutAndBackPropagation(nodeToExplore, timeAllowed);
 
-            if (!inLimit)
-                bestChild = getMaxRobustChild(root);
+            if (!inLimit){
+                bestChild = getMaxRobustChild(root);}
+
+            if(System.currentTimeMillis()> forceEndTime){
+//                for(Node child : root.getChildren()){
+//                    System.err.println(child.getNoOfVisits());
+//                }
+                return root.getBestChild().getMove();
+            }
         }
 
          //We need the move that leads to the best result.
