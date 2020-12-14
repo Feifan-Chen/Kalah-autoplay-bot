@@ -243,5 +243,15 @@ public class Kalah {
         }
         return legalMoves;
     }
+
+    /**
+     * Check if the given side won. By definition, if the other side has no legal moves, then this side won.
+     * @param board The board to check.
+     * @param side The side to check.
+     * @return If this side wins.
+     */
+    public static boolean hasWon(Board board, Side side) {
+        return holesEmpty(board, side.opposite());
+    }
 }
 

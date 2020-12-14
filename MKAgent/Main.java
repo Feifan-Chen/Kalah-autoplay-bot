@@ -314,13 +314,22 @@ public class Main {
     }
 
     public static double heuristic(Board board, Side side) {
-        return Evaluation.getValue(board, side);
+        return board.payoffs(mySide);
     }
 
     public static Object[] minimax(Side side, Board board, double alpha, double beta, int depth, boolean maxPlayer) {
         // Return value should be Object[Move, Double].
-        if (depth == MAX_DEPTH || Kalah.gameOver(board)) {
-            return new Object[] {null, heuristic(board, side)};
+
+        // 我们希望尽可能快的赢，e.g. 深度为2时赢比深度为5时赢更好，所以获胜时的value是max-depth。
+        if (Kalah.hasWon(board, mySide))
+            return new Object[] {null, Double.MAX_VALUE - depth};
+
+        // 同理，我们希望尽可能慢的输，e.g. 深度为5时输比深度为2时输更好，所以输的时候value是min+depth。
+        if (Kalah.hasWon(board, side.opposite()))
+            return new Object[] {null, -1 * Double.MAX_VALUE + depth};
+
+        if (depth == MAX_DEPTH) {
+            return new Object[] {null, heuristic(board, mySide)};
         }
         // System.err.println("Depth: " + depth);
         double bestValue;
