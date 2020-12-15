@@ -162,7 +162,7 @@ public class Main {
     }
 
 
-    private static double MCTSNextMove(Board board, long timeAllowed, Side side) {
+    private static ArrayList<Node> MCTSNextMove(Board board, long timeAllowed, Side side) {
 
         int generation = 0;
         final int GEN_LIMIT = Integer.MAX_VALUE;
@@ -195,21 +195,42 @@ public class Main {
 //                for(Node child : root.getChildren()){
 //                    System.err.println(child.getNoOfVisits());
 //                }
-                return root.getBestChild().getMove().getHole();
+                ArrayList<Node> ret = new ArrayList<>();
+                for (int i = 0; i < 3; i ++)
+                {
+                    Node child = root.getBestChild();
+                    ret.add(new Node(child));
+                    root.getChildren().remove(child);
+                    if (root.getChildren().size() == 0)
+                        break;
+                }
+                return ret;
             }
         }
 
-         //We need the move that leads to the best result.
-        for(Node child : root.getChildren()){
-            System.err.println(child.getNoOfVisits());
+        ArrayList<Node> ret = new ArrayList<>();
+        for (int i = 0; i < 3; i ++)
+        {
+            Node child = root.getBestChild();
+            ret.add(new Node(child));
+            root.getChildren().remove(child);
+            if (root.getChildren().size() == 0)
+                break;
         }
+        return ret;
+
+         //We need the move that leads to the best result.
+//        for(Node child : root.getChildren()){
+//            System.err.println(child.getNoOfVisits());
+//        }
 
 //        for (Node child : root.getChildren())
 //            System.err.println("visit : " + child.getNoOfVisits() + "genearation " + generation);
 
 
+
         //return root.getBestChild().getMove();
-        return bestChild.getMove().getHole();
+     //   return bestChild.getMove().getHole();
     }
 
     public static double heuristic(Board board, Side side) {
@@ -226,15 +247,15 @@ public class Main {
         {
 
             if (node.getBoard().payoffs(mySide) > 0)
-                return new Object[]{null, 1.0};
+                return new Object[]{null, Double.MAX_VALUE};
             else
-                return new Object[]{null, 0.0};
+                return new Object[]{null, Double.MIN_VALUE};
 
         }
 
         if (depth == 0)
         {
-            return new Object[] {null, MCTSNextMove(node.getBoard(), 8, node.getWhosTurnNext())};
+            return new Object[] {null, (double) Evaluation.getValue(node.getBoard(), node.getWhosTurnNext())};
         }
 
         // Max node
@@ -463,8 +484,7 @@ public class Main {
             }
 
             // Continues the game
-            while (true)
-            {
+            while (true) {
                 System.err.println();
                 msg = recvMsg();
                 System.err.print("Received: " + msg);
@@ -488,8 +508,7 @@ public class Main {
                     continue;
                 }
 
-                if (may_swap)
-                {
+                if (may_swap) {
                     may_swap = false;
                     if (r.move <= 2) {
                         mySide = mySide.opposite();
@@ -498,14 +517,27 @@ public class Main {
                         continue;
                     }
                 }
-               // Calculate next move using MCTS
+                // Calculate next move using MCTS
                 long start = System.currentTimeMillis();
+                ArrayList<Node> MCTnodes = MCTSNextMove(kalah.getBoard(), 500, mySide);
+                int next_move = 1;
+                if (MCTnodes.size() == 1) {
+                    Node node = MCTnodes.get(0);
+                    next_move = node.getMove().getHole();
+                } else
+                {
+                    double highest = Double.MIN_VALUE;
+                    for (Node node: MCTnodes)
+                    {
+                        Object[] obj = minimax_pruning(node, Double.MAX_VALUE, Double.MIN_VALUE, 5);
+                        if (highest <= (double)obj[1]){
+                            highest = (double)obj[1];
+                            next_move = node.getMove().getHole();
+                        }
+                    }
+                }
+
                 //Move next_move = MCTSNextMove(kalah.getBoard(), timeAllowed);
-                Node node = new Node();
-                node.setBoard(new Board(kalah.getBoard()));
-                node.setWhosTurnNext(mySide);
-                int next_move = (int)(minimax_pruning(node, Double.MIN_VALUE, Double.MAX_VALUE, 5)[0]);
-                System.err.println(System.currentTimeMillis() - start);
 
                 msg = Protocol.createMoveMsg(next_move);
 
