@@ -51,14 +51,18 @@ public class Evaluation {
         return maxNum + 1;
     }
 
+    // 这里可以把 Boolean simulateOpp 换成 int depth， Boolean的话跑两次 depth可以自己定跑几次
     private static int maxMoveScore(Board board, Side playerSide, Boolean simulateOpp) {
         ArrayList<Integer> scores = new ArrayList<>();
         Move simulationMove = new Move(Side.SOUTH, 1);
         int score = getMaxCaptureScore(board, playerSide, simulationMove);
         Board simulationBoard = new Board(board);
         Kalah.makeMove(simulationBoard, simulationMove);
+
+        // 这里可以改weight
+        double weight = 0.5;
         if (simulateOpp)
-            score -= maxMoveScore(simulationBoard, playerSide.opposite(), false);
+            score -= maxMoveScore(simulationBoard, playerSide.opposite(), false) * weight;
         scores.add(score);
         for (Move move : getMoveAgainMoves(board, playerSide)) {
             simulationBoard = new Board(board);
