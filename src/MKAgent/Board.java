@@ -100,7 +100,6 @@ public class Board extends Observable implements Cloneable {
      */
     @Override
     public Board clone() {
-        Board clone = (Board) super.clone();
         return new Board(this);
     }
 
