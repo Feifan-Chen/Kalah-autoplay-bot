@@ -6,11 +6,11 @@ import java.util.Objects;
 import java.util.Random;
 
 import static MKAgent.Main.mySide;
+import static MKAgent.Main.constant;
 
 public class Node implements Comparable<Node> {
     // Describes how we get here, null for root node.
     private Move move;
-
     // Describes who should move next.
     private Side whosTurnNext;
 
@@ -23,12 +23,12 @@ public class Node implements Comparable<Node> {
     public Node() {
         move = null;
         this.noOfVisits = 0;
-        this.totalScore = 0;
+        this.totalScore = 0.0;
         this.parent = null;
         this.children = new ArrayList<>();
     }
 
-    public Node(int noOfVisits, int totalScore, Side whosTurnNext, Move move, Board board, Node parent, ArrayList<Node> children) {
+    public Node(int noOfVisits, double totalScore, Side whosTurnNext, Move move, Board board, Node parent, ArrayList<Node> children) {
         this.noOfVisits = noOfVisits;
         this.totalScore = totalScore;
         this.board = new Board(board);
@@ -104,7 +104,7 @@ public class Node implements Comparable<Node> {
         return this.totalScore;
     }
 
-    public void incrementScore(double payoff) {this.totalScore += payoff; }
+    public void incrementScore(int payoff) {this.totalScore += payoff; }
 
     public void setBoard(Board board) {
         this.board = board;
@@ -164,9 +164,9 @@ public class Node implements Comparable<Node> {
          */
         double visits = noOfVisits;
         if(this.move.getSide() == mySide)
-            return ( totalScore/visits + 2 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits) + getHeuristic(this));
+            return ( totalScore/visits + 2.5 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
         else
-            return ( (1- totalScore/visits) + 2 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits) + getHeuristic(this));
+            return ( (1- totalScore/visits) + 2.5 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/ visits));
     }
 
     @Override
@@ -208,8 +208,21 @@ public class Node implements Comparable<Node> {
 
     public Node getBestChild(){
         return Collections.max(this.children, (first, second) -> {
-            int vit1 = first.noOfVisits;
-            int vit2 = second.noOfVisits;
+            double vit1 = first.getSecureValue();
+            double vit2 = second.getSecureValue();
+            return Double.compare(vit1, vit2);
+        });
+
+    }
+
+    public double getSecureValue(){
+        return ( totalScore/noOfVisits - 1.0 * Math.sqrt(2 * Math.log(this.getParent().getNoOfVisits())/noOfVisits));
+    }
+
+    public Node getSecureChild(){
+        return Collections.max(this.children, (first, second) -> {
+            double vit1 = first.getSecureValue();
+            double vit2 = second.getSecureValue();
             return Double.compare(vit1, vit2);
         });
 
@@ -218,9 +231,10 @@ public class Node implements Comparable<Node> {
     public static double getHeuristic(Node node){
         double res = 0.0;
         if (Evaluation.canNextMove(node))
-            res += 1;
+            res += 0.6;
         if(Evaluation.canCaptureScore(node))
-            res += 2;
+            res += 0.3;
         return res;
     }
+
 }

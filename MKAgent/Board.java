@@ -300,5 +300,24 @@ public class Board extends Observable implements Cloneable
 		return this_seeds - opp_seeds;
 	}
 
+	public double weighted_payoff(Side side)
+	{
+		int this_store = getSeedsInStore(side);
+		int opp_store = getSeedsInStore(side.opposite());
+
+		double this_seeds = 0;
+		double opp_seeds = 0;
+		for(int i = 1; i <= holes; i++)
+		{
+			this_seeds += getSeeds(side, i);
+			opp_seeds += getSeeds(side.opposite(), i);
+		}
+
+		this_seeds = this_store + 0.4 * this_seeds;
+		opp_seeds = opp_store + 0.4 * opp_seeds;
+
+		return this_seeds - opp_seeds;
+	}
+
 }
 

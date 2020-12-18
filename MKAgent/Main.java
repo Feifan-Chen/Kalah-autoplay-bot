@@ -15,7 +15,7 @@ public class Main {
      */
     private static final Reader input = new BufferedReader(new InputStreamReader(System.in));
     public static Side mySide;
-
+    public static double constant;
     //private static Side mySide;
     private static Side oppSide;
 
@@ -51,12 +51,8 @@ public class Main {
     private static Node selectionAndExpansion(Node node) {
         //if node has children which is all visited, check next level.
         if(!node.isLeafNode()){
-            if(node.childrenAllVisited()) {
-//                for (Node child : node.getChildren()) {
-//                    System.err.println(child.getNoOfVisits());
-//                }
+            if(node.childrenAllVisited())
                 return selectionAndExpansion(Collections.max(node.getChildren(), Comparator.comparing(Node::getUCTValue)));
-            }
             else
                 return node.getRandomAvaliableChild();
         }
@@ -94,41 +90,24 @@ public class Main {
         Node simulateNode = new Node(node);
         Board board = simulateNode.getBoard();
         Side side = simulateNode.getWhosTurnNext();
-        double score = 0.0;
-        boolean doSimulation = true;
-
-        //判断有没有必要提前结束棋局
-        if(board.getSeedsInStore(mySide) > 49) {
-            score = 1.0;
-            doSimulation = false;
+        int dept = 0;
+        while(!Kalah.gameOver(board) && dept < 4)
+        {
+            ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, side);
+            Move next_move = legalMoves.get(new Random().nextInt(legalMoves.size()));
+            side = Kalah.makeMove(board, next_move);
+            dept++;
         }
-        else if (board.getSeedsInStore(mySide.opposite()) > 49) {
-            score = 0.0;
-            doSimulation = false;
-        }
+        double result;
+        if(board.weighted_payoff(mySide) > 0)
+            result = 1.0;
+        else if(board.weighted_payoff(mySide) == 0)
+            result = 0.0;
+        else
+            result = -1.0;
+        backPropagation(node, result);
 
-        if(doSimulation) {
-            while (!Kalah.gameOver(board)) {
-                ArrayList<Move> legalMoves = Kalah.getAllLegalMoves(board, side);
-                Move next_move = legalMoves.get(new Random().nextInt(legalMoves.size()));
-                side = Kalah.makeMove(board, next_move);
-            }
-
-            int result = board.payoffs(mySide);
-            if (result > 0) {
-                if (result > 15) {
-                    score = 1.0;
-                }
-                score = 0.5;
-            } else
-                score = 0;
-//            if(board.payoffs(mySide) > 0)
-//                score = 1;
-//            else
-//                score = 0;
-        }
-
-        backPropagation(node, score);
+        backPropagation(node, result);
     }
 
     private static void backPropagation(Node node, double payoff) {
@@ -166,7 +145,7 @@ public class Main {
         final int GEN_LIMIT = Integer.MAX_VALUE;
 
         long endTime = System.currentTimeMillis() + timeAllowed;
-        long forceEndTime = System.currentTimeMillis() + 2 * timeAllowed;
+        //g forceEndTime = System.currentTimeMillis() + 2 * timeAllowed;
 
         Node root = new Node(0, 0, mySide, null, board, null, new ArrayList<>());
 
@@ -184,20 +163,15 @@ public class Main {
             rolloutAndBackPropagation(nodeToExplore, timeAllowed);
 
             if (!inLimit){
-                bestChild = getMaxRobustChild(root);}
+                bestChild = getMaxRobustChild(root);
+                if(bestChild != null)
+                    return bestChild.getMove();
+                else
+                    return root.getBestChild().getMove();
 
-            if(System.currentTimeMillis()> forceEndTime){
-//                for(Node child : root.getChildren()){
-//                    System.err.println(child.getNoOfVisits());
-//                }
-                return root.getBestChild().getMove();
             }
         }
-
-         //We need the move that leads to the best result.
-        for(Node child : root.getChildren()){
-            System.err.println(child.getNoOfVisits());
-        }
+        //System.err.println();
         //return root.getBestChild().getMove();
         return bestChild.getMove();
     }
@@ -213,7 +187,7 @@ public class Main {
         // Record the board locally.
         Kalah kalah = new Kalah(new Board(7,7));
 
-        long timeAllowed = 1000;
+        long timeAllowed = 3300;
 
         try {
             String msg = recvMsg();
@@ -233,7 +207,7 @@ public class Main {
                     if (south) {
                         mySide = Side.SOUTH;
                         oppSide = Side.NORTH;
-                        sendMsg(Protocol.createMoveMsg(1));
+                        sendMsg(Protocol.createMoveMsg(5));
                     } else {
                         mySide = Side.NORTH;
                         oppSide = Side.SOUTH;
@@ -286,6 +260,8 @@ public class Main {
                 }
 
                 // Calculate next move using MCTS
+//                int difference = kalah.getBoard().getSeedsInStore(mySide) + kalah.getBoard().getSeedsInStore(mySide.opposite());
+//                constant = (98-difference) / (double)98;
                 Move next_move = MCTSNextMove(kalah.getBoard(), timeAllowed);
                 msg = Protocol.createMoveMsg(next_move.getHole());
 
